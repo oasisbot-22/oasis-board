@@ -2,15 +2,18 @@
 
 Mobile-first Kanban board (plain HTML/CSS/JS, no build step) with:
 
-- 3 columns: **To Do**, **Doing**, **Done**
+- Default 3-column board: **To Do**, **Doing**, **Done**
+- Top view tabs: **Board**, **Backlog**, **Historial**
 - Cards with title, optional description, checklist items
 - Create cards in **To Do**
 - Edit cards
 - Add/remove checklist items
 - Check/uncheck checklist items
 - Desktop drag-and-drop between columns
-- Mobile touch-friendly move menu per card (Move → To Do / Doing / Done)
+- Mobile touch drag-and-drop with finger between columns (pointer events)
 - Auto-rule: when checklist is not empty and all items are checked, card moves to **Done**
+- Done cards older than 2 days move out of the main board and appear in **Historial**
+- **Backlog** view shows all current **To Do** cards in one place
 - Persistence with `localStorage`
 - PWA support: manifest, service worker cache, installable app metadata/icons
 

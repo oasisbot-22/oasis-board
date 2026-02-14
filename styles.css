@@ -48,14 +48,32 @@ button.primary {
 }
 button.primary:hover { background: var(--primary-dark); }
 
+.view-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .45rem;
+  padding: .65rem .85rem 0;
+}
+
+.tab-btn {
+  padding: .5rem .65rem;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.view-panel { display: none; }
+.view-panel.active { display: block; }
+
 .board {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(82vw, 1fr);
+  grid-template-columns: 1fr;
   gap: .85rem;
   padding: .85rem;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
 }
 
 .column {
@@ -63,8 +81,7 @@ button.primary:hover { background: var(--primary-dark); }
   border: 1px solid var(--border);
   border-radius: .75rem;
   padding: .75rem;
-  min-height: calc(100dvh - 110px);
-  scroll-snap-align: start;
+  min-height: 240px;
 }
 
 .card-list {
@@ -73,14 +90,44 @@ button.primary:hover { background: var(--primary-dark); }
   gap: .75rem;
 }
 
+.panel-wrap {
+  padding: .85rem;
+}
+
+.panel-note {
+  margin: -.25rem 0 .8rem;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.empty-note {
+  color: var(--muted);
+  font-size: .9rem;
+  border: 1px dashed var(--border);
+  border-radius: .6rem;
+  padding: .65rem;
+  background: #fff;
+}
+
 .card {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: .65rem;
   padding: .7rem;
+  touch-action: pan-y;
 }
-.card.dragging { opacity: .5; }
+.card.dragging,
+.card.touch-drag-source { opacity: .5; }
 .column.drop-target { outline: 2px dashed var(--primary); outline-offset: 2px; }
+
+.touch-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  width: min(320px, 88vw);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, .18);
+  transform: translate(-50%, -50%);
+}
 
 .card-top {
   display: flex;
@@ -102,17 +149,6 @@ button.primary:hover { background: var(--primary-dark); }
   white-space: pre-wrap;
 }
 .card-desc:empty { display: none; }
-
-.move-menu {
-  margin-top: .5rem;
-  display: flex;
-  gap: .35rem;
-  flex-wrap: wrap;
-}
-.move-menu button {
-  padding: .3rem .55rem;
-  font-size: .85rem;
-}
 
 .checklist {
   margin: .25rem 0 0;
@@ -178,14 +214,8 @@ menu {
 @media (min-width: 861px) {
   .board {
     grid-template-columns: repeat(3, minmax(260px, 1fr));
-    grid-auto-flow: row;
-    grid-auto-columns: unset;
-    overflow-x: visible;
-    scroll-snap-type: none;
     gap: 1rem;
     padding: 1rem;
   }
   .column { min-height: 70vh; }
-  .move-toggle-btn,
-  .move-menu { display: none; }
 }

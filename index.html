@@ -18,20 +18,44 @@
       <button id="newCardBtn" class="primary">+ New Card</button>
     </header>
 
-    <main class="board" id="board">
-      <section class="column" data-column="todo">
-        <h2>To Do</h2>
-        <div class="card-list" id="todoList"></div>
-      </section>
-      <section class="column" data-column="doing">
-        <h2>Doing</h2>
-        <div class="card-list" id="doingList"></div>
-      </section>
-      <section class="column" data-column="done">
-        <h2>Done</h2>
-        <div class="card-list" id="doneList"></div>
-      </section>
+    <nav class="view-tabs" aria-label="Views">
+      <button id="boardTab" class="tab-btn active" data-view="board" type="button">Board</button>
+      <button id="backlogTab" class="tab-btn" data-view="backlog" type="button">Backlog</button>
+      <button id="historyTab" class="tab-btn" data-view="history" type="button">Historial</button>
+    </nav>
+
+    <main id="boardView" class="view-panel active">
+      <div class="board" id="board">
+        <section class="column" data-column="todo">
+          <h2>To Do</h2>
+          <div class="card-list" id="todoList"></div>
+        </section>
+        <section class="column" data-column="doing">
+          <h2>Doing</h2>
+          <div class="card-list" id="doingList"></div>
+        </section>
+        <section class="column" data-column="done">
+          <h2>Done</h2>
+          <div class="card-list" id="doneList"></div>
+        </section>
+      </div>
     </main>
+
+    <section id="backlogView" class="view-panel" aria-label="Backlog view">
+      <div class="panel-wrap">
+        <h2>Backlog</h2>
+        <p class="panel-note">Cards in To Do appear here for quick review.</p>
+        <div class="card-list" id="backlogList"></div>
+      </div>
+    </section>
+
+    <section id="historyView" class="view-panel" aria-label="History view">
+      <div class="panel-wrap">
+        <h2>Historial</h2>
+        <p class="panel-note">Done cards older than 2 days are archived here.</p>
+        <div class="card-list" id="historyList"></div>
+      </div>
+    </section>
 
     <dialog id="cardDialog">
       <form id="cardForm" method="dialog">
@@ -65,14 +89,8 @@
         <div class="card-top">
           <h3 class="card-title"></h3>
           <div class="card-actions">
-            <button class="move-toggle-btn" type="button" aria-expanded="false">Move</button>
             <button class="edit-btn" type="button">Edit</button>
           </div>
-        </div>
-        <div class="move-menu" hidden>
-          <button type="button" data-move="todo">To Do</button>
-          <button type="button" data-move="doing">Doing</button>
-          <button type="button" data-move="done">Done</button>
         </div>
         <p class="card-desc"></p>
         <ul class="checklist"></ul>
