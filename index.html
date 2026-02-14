@@ -5,57 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#2563eb" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="app-version" content="__APP_VERSION__" />
     <title>Oasis Board</title>
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.webmanifest?v=__APP_VERSION__" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png?v=__APP_VERSION__" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=__APP_VERSION__" />
+    <link rel="stylesheet" href="styles.css?v=__APP_VERSION__" />
   </head>
   <body>
-    <header class="app-header">
-      <h1>Oasis Board</h1>
-      <button id="newCardBtn" class="primary">+ New Card</button>
-    </header>
+    <div class="app-shell">
+      <header class="app-header">
+        <h1>Oasis Board</h1>
+        <button id="newCardBtn" class="primary">+ New Card</button>
+      </header>
 
-    <nav class="view-tabs" aria-label="Views">
-      <button id="boardTab" class="tab-btn active" data-view="board" type="button">Board</button>
-      <button id="backlogTab" class="tab-btn" data-view="backlog" type="button">Backlog</button>
-      <button id="historyTab" class="tab-btn" data-view="history" type="button">Historial</button>
-    </nav>
+      <nav class="view-tabs" aria-label="Views">
+        <button id="boardTab" class="tab-btn active" data-view="board" type="button">Board</button>
+        <button id="backlogTab" class="tab-btn" data-view="backlog" type="button">Backlog</button>
+        <button id="historyTab" class="tab-btn" data-view="history" type="button">Historial</button>
+      </nav>
 
-    <main id="boardView" class="view-panel active">
-      <div class="board" id="board">
-        <section class="column" data-column="todo">
-          <h2>To Do</h2>
-          <div class="card-list" id="todoList"></div>
-        </section>
-        <section class="column" data-column="doing">
-          <h2>Doing</h2>
-          <div class="card-list" id="doingList"></div>
-        </section>
-        <section class="column" data-column="done">
-          <h2>Done</h2>
-          <div class="card-list" id="doneList"></div>
-        </section>
+      <div id="pullRefresh" class="pull-refresh" aria-hidden="true">
+        <div class="pull-refresh-spinner"></div>
       </div>
-    </main>
 
-    <section id="backlogView" class="view-panel" aria-label="Backlog view">
-      <div class="panel-wrap">
-        <h2>Backlog</h2>
-        <p class="panel-note">Cards in To Do appear here for quick review.</p>
-        <div class="card-list" id="backlogList"></div>
-      </div>
-    </section>
+      <main id="boardView" class="view-panel active">
+        <div class="board" id="board">
+          <section class="column" data-column="todo">
+            <h2>To Do</h2>
+            <div class="card-list" id="todoList"></div>
+          </section>
+          <section class="column" data-column="doing">
+            <h2>Doing</h2>
+            <div class="card-list" id="doingList"></div>
+          </section>
+          <section class="column" data-column="done">
+            <h2>Done</h2>
+            <div class="card-list" id="doneList"></div>
+          </section>
+        </div>
+      </main>
 
-    <section id="historyView" class="view-panel" aria-label="History view">
-      <div class="panel-wrap">
-        <h2>Historial</h2>
-        <p class="panel-note">Done cards older than 2 days are archived here.</p>
-        <div class="card-list" id="historyList"></div>
-      </div>
-    </section>
+      <section id="backlogView" class="view-panel" aria-label="Backlog view">
+        <div class="panel-wrap">
+          <h2>Backlog</h2>
+          <p class="panel-note">Backlog is now a dedicated column for queued work.</p>
+          <div class="card-list" id="backlogList"></div>
+        </div>
+      </section>
+
+      <section id="historyView" class="view-panel" aria-label="History view">
+        <div class="panel-wrap">
+          <h2>Historial</h2>
+          <p class="panel-note">Cards can be moved here manually, and Done cards older than 2 days are auto-archived here.</p>
+          <div class="card-list" id="historyList"></div>
+        </div>
+      </section>
+
+      <footer class="app-footer" aria-live="polite">
+        <span id="runtimeVersion">v__APP_VERSION__</span>
+      </footer>
+    </div>
 
     <dialog id="cardDialog">
       <form id="cardForm" method="dialog">
@@ -67,6 +79,17 @@
         <label>
           Description (optional)
           <textarea id="descInput" rows="3" maxlength="500"></textarea>
+        </label>
+
+        <label>
+          Column
+          <select id="columnInput">
+            <option value="backlog">Backlog</option>
+            <option value="todo">To Do</option>
+            <option value="doing">Doing</option>
+            <option value="done">Done</option>
+            <option value="history">Historial</option>
+          </select>
         </label>
 
         <div class="checklist-editor">
@@ -97,6 +120,9 @@
       </article>
     </template>
 
-    <script src="app.js"></script>
+    <script>
+      window.__APP_VERSION__ = '__APP_VERSION__';
+    </script>
+    <script src="app.js?v=__APP_VERSION__"></script>
   </body>
 </html>

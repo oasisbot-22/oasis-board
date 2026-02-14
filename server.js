@@ -1,9 +1,17 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+const APP_VERSION =
+  process.env.APP_VERSION ||
+  process.env.RAILWAY_GIT_COMMIT_SHA ||
+  process.env.SOURCE_VERSION ||
+  String(Date.now());
+const INDEX_TEMPLATE = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is required. Add a PostgreSQL plugin/service in Railway and expose DATABASE_URL.');
@@ -17,9 +25,27 @@ const pool = new Pool({
 
 const app = express();
 app.use(express.json());
-app.use(express.static(ROOT));
 
-const ALLOWED_COLUMNS = new Set(['todo', 'doing', 'done']);
+function renderIndexHtml() {
+  return INDEX_TEMPLATE.replaceAll('__APP_VERSION__', APP_VERSION);
+}
+
+app.use(
+  express.static(ROOT, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('service-worker.js') || filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return;
+      }
+      if (filePath.endsWith('.css') || filePath.endsWith('.js') || filePath.endsWith('.webmanifest')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  })
+);
+
+const ALLOWED_COLUMNS = new Set(['backlog', 'todo', 'doing', 'done', 'history']);
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -39,6 +65,10 @@ function normalizeChecklist(list) {
 function applyChecklistRule(column, checklist, doneAt) {
   let nextColumn = column;
   let nextDoneAt = doneAt || null;
+
+  if (nextColumn === 'history') {
+    return { column: 'history', doneAt: Number(nextDoneAt) || Date.now() };
+  }
 
   if (checklist.length > 0 && checklist.every((i) => i.checked)) {
     nextColumn = 'done';
@@ -66,6 +96,27 @@ function toCard(row) {
   };
 }
 
+async function autoArchiveDoneCards() {
+  const cutoff = Date.now() - TWO_DAYS_MS;
+  await pool.query(
+    `UPDATE cards
+     SET card_column = 'history', updated_at = $2
+     WHERE card_column = 'done' AND done_at IS NOT NULL AND done_at <= $1`,
+    [cutoff, Date.now()],
+  );
+}
+
+async function migrateTodoIntoBacklog() {
+  await pool.query(
+    `UPDATE cards
+     SET card_column = 'backlog', updated_at = $1
+     WHERE card_column = 'todo'
+       AND COALESCE(BTRIM(description), '') = ''
+       AND COALESCE(jsonb_array_length(checklist), 0) = 0`,
+    [Date.now()],
+  );
+}
+
 async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS cards (
@@ -73,32 +124,73 @@ async function initDb() {
       title TEXT NOT NULL,
       description TEXT NOT NULL DEFAULT '',
       checklist JSONB NOT NULL DEFAULT '[]'::jsonb,
-      card_column TEXT NOT NULL CHECK (card_column IN ('todo', 'doing', 'done')),
+      card_column TEXT NOT NULL,
       done_at BIGINT,
       created_at BIGINT NOT NULL,
       updated_at BIGINT NOT NULL
     );
   `);
 
+  await pool.query(`
+    DO $$
+    DECLARE
+      r RECORD;
+    BEGIN
+      FOR r IN
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+        WHERE c.conrelid = 'cards'::regclass
+          AND c.contype = 'c'
+          AND a.attname = 'card_column'
+      LOOP
+        EXECUTE format('ALTER TABLE cards DROP CONSTRAINT %I', r.conname);
+      END LOOP;
+    END $$;
+  `);
+
+  await pool.query(`
+    ALTER TABLE cards
+    ADD CONSTRAINT cards_card_column_check
+    CHECK (card_column IN ('backlog', 'todo', 'doing', 'done', 'history'));
+  `);
+
   const existing = await pool.query('SELECT COUNT(*)::int AS count FROM cards');
-  if (existing.rows[0].count > 0) return;
+  if (existing.rows[0].count === 0) {
+    const seedTitles = [
+      'Fix mobile UX touch drag + vertical columns',
+      'Deploy live verified',
+      'Validate Backlog+Historial in prod',
+      'Share final link',
+    ];
 
-  const seedTitles = [
-    'Fix mobile UX touch drag + vertical columns',
-    'Deploy live verified',
-    'Validate Backlog+Historial in prod',
-    'Share final link',
-  ];
-
-  const now = Date.now();
-  for (const title of seedTitles) {
-    await pool.query(
-      `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [uid(), title, '', JSON.stringify([]), 'todo', null, now, now],
-    );
+    const now = Date.now();
+    for (const title of seedTitles) {
+      await pool.query(
+        `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [uid(), title, '', JSON.stringify([]), 'backlog', null, now, now],
+      );
+    }
   }
+
+  await migrateTodoIntoBacklog();
+  await autoArchiveDoneCards();
 }
+
+app.get('/__version', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.json({
+    appVersion: APP_VERSION,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA || null,
+    sourceVersion: process.env.SOURCE_VERSION || null,
+  });
+});
+
+app.get(['/', '/index.html'], (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.type('html').send(renderIndexHtml());
+});
 
 app.get('/api/health', async (_req, res) => {
   await pool.query('SELECT 1');
@@ -106,6 +198,7 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.get('/api/cards', async (_req, res) => {
+  await autoArchiveDoneCards();
   const rows = await pool.query('SELECT * FROM cards ORDER BY created_at ASC');
   res.json({ cards: rows.rows.map(toCard) });
 });
@@ -116,8 +209,8 @@ app.post('/api/cards', async (req, res) => {
 
   const description = String(req.body?.description || '').trim();
   const checklist = normalizeChecklist(req.body?.checklist);
-  const requestedColumn = String(req.body?.column || 'todo');
-  const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : 'todo';
+  const requestedColumn = String(req.body?.column || 'backlog');
+  const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : 'backlog';
   const { column, doneAt } = applyChecklistRule(baseColumn, checklist, null);
 
   const card = {
@@ -217,7 +310,8 @@ app.delete('/api/cards/:id', async (req, res) => {
 });
 
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(ROOT, 'index.html'));
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.type('html').send(renderIndexHtml());
 });
 
 app.use((err, _req, res, _next) => {

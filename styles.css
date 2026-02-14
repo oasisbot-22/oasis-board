@@ -14,6 +14,19 @@ body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+main,
+.view-panel {
+  flex: 1;
 }
 
 .app-header {
@@ -69,11 +82,60 @@ button.primary:hover { background: var(--primary-dark); }
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
+.pull-refresh {
+  --pull-progress: 0;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: 108px;
+  transform: translate(-50%, -72px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 18px rgba(31, 41, 55, .12);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1), opacity .18s ease;
+  will-change: transform, opacity;
+}
+
+.pull-refresh.is-pulling {
+  transition: opacity .1s linear;
+}
+
+.pull-refresh.visible {
+  opacity: 1;
+}
+
+.pull-refresh-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid #bfdbfe;
+  border-top-color: var(--primary);
+  transform: rotate(calc(var(--pull-progress) * 220deg));
+  transition: transform .12s linear;
+}
+
+.pull-refresh.refreshing .pull-refresh-spinner {
+  animation: pull-spin .75s linear infinite;
+}
+
+@keyframes pull-spin {
+  to { transform: rotate(360deg); }
+}
+
 .board {
   display: grid;
   grid-template-columns: 1fr;
   gap: .85rem;
   padding: .85rem;
+  touch-action: pan-y;
 }
 
 .column {
@@ -82,6 +144,7 @@ button.primary:hover { background: var(--primary-dark); }
   border-radius: .75rem;
   padding: .75rem;
   min-height: 240px;
+  contain: layout paint;
 }
 
 .card-list {
@@ -115,9 +178,37 @@ button.primary:hover { background: var(--primary-dark); }
   border-radius: .65rem;
   padding: .7rem;
   touch-action: pan-y;
+  contain: layout paint;
 }
 .card.dragging,
 .card.touch-drag-source { opacity: .5; }
+
+html.drag-mode-lock,
+body.drag-mode-lock {
+  -webkit-touch-callout: none;
+}
+
+html.drag-mode-lock *,
+body.drag-mode-lock * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.board.touch-drag-active {
+  touch-action: none;
+}
+
+.card.touch-drag-source,
+.card.touch-drag-source *,
+.touch-drag-ghost,
+.touch-drag-ghost * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .column.drop-target { outline: 2px dashed var(--primary); outline-offset: 2px; }
 
 .touch-drag-ghost {
@@ -127,6 +218,7 @@ button.primary:hover { background: var(--primary-dark); }
   width: min(320px, 88vw);
   box-shadow: 0 12px 24px rgba(0, 0, 0, .18);
   transform: translate(-50%, -50%);
+  will-change: transform;
 }
 
 .card-top {
@@ -177,7 +269,7 @@ dialog {
   padding: 1rem;
 }
 #cardForm label { display: grid; gap: .35rem; }
-#cardForm input, #cardForm textarea {
+#cardForm input, #cardForm textarea, #cardForm select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: .5rem;
@@ -209,6 +301,17 @@ menu {
   display: flex;
   justify-content: end;
   gap: .5rem;
+}
+
+.app-footer {
+  padding: .35rem .85rem calc(.35rem + env(safe-area-inset-bottom));
+  color: var(--muted);
+  font-size: .75rem;
+  text-align: right;
+}
+
+#runtimeVersion {
+  opacity: .8;
 }
 
 @media (min-width: 861px) {
