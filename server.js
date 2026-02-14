@@ -1,45 +1,237 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
 const path = require('path');
+const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.txt': 'text/plain; charset=utf-8',
-};
-
-function send(res, status, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(status, { 'Content-Type': type });
-  res.end(body);
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is required. Add a PostgreSQL plugin/service in Railway and expose DATABASE_URL.');
+  process.exit(1);
 }
 
-http.createServer((req, res) => {
-  const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-  let filePath = path.join(ROOT, urlPath === '/' ? 'index.html' : urlPath);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false },
+});
 
-  if (!filePath.startsWith(ROOT)) {
-    return send(res, 403, 'Forbidden');
+const app = express();
+app.use(express.json());
+app.use(express.static(ROOT));
+
+const ALLOWED_COLUMNS = new Set(['todo', 'doing', 'done']);
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function normalizeChecklist(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item) => ({
+      id: item?.id || uid(),
+      text: String(item?.text || '').trim(),
+      checked: Boolean(item?.checked),
+    }))
+    .filter((i) => i.text.length > 0);
+}
+
+function applyChecklistRule(column, checklist, doneAt) {
+  let nextColumn = column;
+  let nextDoneAt = doneAt || null;
+
+  if (checklist.length > 0 && checklist.every((i) => i.checked)) {
+    nextColumn = 'done';
   }
 
-  fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) {
-      return send(res, 404, 'Not Found');
-    }
+  if (nextColumn === 'done') {
+    nextDoneAt = Number(nextDoneAt) || Date.now();
+  } else {
+    nextDoneAt = null;
+  }
 
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    fs.createReadStream(filePath).pipe(res);
-  });
-}).listen(PORT, () => {
-  console.log(`oasis-board listening on ${PORT}`);
+  return { column: nextColumn, doneAt: nextDoneAt };
+}
+
+function toCard(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description || '',
+    checklist: Array.isArray(row.checklist) ? row.checklist : [],
+    column: row.card_column,
+    doneAt: row.done_at ? Number(row.done_at) : null,
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
+  };
+}
+
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS cards (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      checklist JSONB NOT NULL DEFAULT '[]'::jsonb,
+      card_column TEXT NOT NULL CHECK (card_column IN ('todo', 'doing', 'done')),
+      done_at BIGINT,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL
+    );
+  `);
+
+  const existing = await pool.query('SELECT COUNT(*)::int AS count FROM cards');
+  if (existing.rows[0].count > 0) return;
+
+  const seedTitles = [
+    'Fix mobile UX touch drag + vertical columns',
+    'Deploy live verified',
+    'Validate Backlog+Historial in prod',
+    'Share final link',
+  ];
+
+  const now = Date.now();
+  for (const title of seedTitles) {
+    await pool.query(
+      `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [uid(), title, '', JSON.stringify([]), 'todo', null, now, now],
+    );
+  }
+}
+
+app.get('/api/health', async (_req, res) => {
+  await pool.query('SELECT 1');
+  res.json({ ok: true });
 });
+
+app.get('/api/cards', async (_req, res) => {
+  const rows = await pool.query('SELECT * FROM cards ORDER BY created_at ASC');
+  res.json({ cards: rows.rows.map(toCard) });
+});
+
+app.post('/api/cards', async (req, res) => {
+  const title = String(req.body?.title || '').trim();
+  if (!title) return res.status(400).json({ error: 'title is required' });
+
+  const description = String(req.body?.description || '').trim();
+  const checklist = normalizeChecklist(req.body?.checklist);
+  const requestedColumn = String(req.body?.column || 'todo');
+  const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : 'todo';
+  const { column, doneAt } = applyChecklistRule(baseColumn, checklist, null);
+
+  const card = {
+    id: uid(),
+    title,
+    description,
+    checklist,
+    column,
+    doneAt,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  await pool.query(
+    `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    [
+      card.id,
+      card.title,
+      card.description,
+      JSON.stringify(card.checklist),
+      card.column,
+      card.doneAt,
+      card.createdAt,
+      card.updatedAt,
+    ],
+  );
+
+  res.status(201).json({ card });
+});
+
+app.patch('/api/cards/:id', async (req, res) => {
+  const current = await pool.query('SELECT * FROM cards WHERE id = $1', [req.params.id]);
+  if (!current.rows[0]) return res.status(404).json({ error: 'not found' });
+
+  const row = current.rows[0];
+  const title = req.body?.title != null ? String(req.body.title).trim() : row.title;
+  if (!title) return res.status(400).json({ error: 'title cannot be empty' });
+
+  const description = req.body?.description != null ? String(req.body.description).trim() : row.description;
+  const checklist = req.body?.checklist != null ? normalizeChecklist(req.body.checklist) : row.checklist;
+  const requestedColumn = req.body?.column != null ? String(req.body.column) : row.card_column;
+  const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : row.card_column;
+  const { column, doneAt } = applyChecklistRule(baseColumn, checklist, row.done_at);
+  const updatedAt = Date.now();
+
+  const updated = await pool.query(
+    `UPDATE cards
+     SET title = $2, description = $3, checklist = $4, card_column = $5, done_at = $6, updated_at = $7
+     WHERE id = $1
+     RETURNING *`,
+    [req.params.id, title, description, JSON.stringify(checklist), column, doneAt, updatedAt],
+  );
+
+  res.json({ card: toCard(updated.rows[0]) });
+});
+
+app.patch('/api/cards/:id/column', async (req, res) => {
+  const column = String(req.body?.column || '');
+  if (!ALLOWED_COLUMNS.has(column)) return res.status(400).json({ error: 'invalid column' });
+
+  const current = await pool.query('SELECT * FROM cards WHERE id = $1', [req.params.id]);
+  if (!current.rows[0]) return res.status(404).json({ error: 'not found' });
+
+  const row = current.rows[0];
+  const { column: finalColumn, doneAt } = applyChecklistRule(column, row.checklist, row.done_at);
+
+  const updated = await pool.query(
+    `UPDATE cards SET card_column = $2, done_at = $3, updated_at = $4 WHERE id = $1 RETURNING *`,
+    [req.params.id, finalColumn, doneAt, Date.now()],
+  );
+
+  res.json({ card: toCard(updated.rows[0]) });
+});
+
+app.patch('/api/cards/:id/checklist', async (req, res) => {
+  const checklist = normalizeChecklist(req.body?.checklist);
+
+  const current = await pool.query('SELECT * FROM cards WHERE id = $1', [req.params.id]);
+  if (!current.rows[0]) return res.status(404).json({ error: 'not found' });
+
+  const row = current.rows[0];
+  const { column, doneAt } = applyChecklistRule(row.card_column, checklist, row.done_at);
+
+  const updated = await pool.query(
+    `UPDATE cards SET checklist = $2, card_column = $3, done_at = $4, updated_at = $5 WHERE id = $1 RETURNING *`,
+    [req.params.id, JSON.stringify(checklist), column, doneAt, Date.now()],
+  );
+
+  res.json({ card: toCard(updated.rows[0]) });
+});
+
+app.delete('/api/cards/:id', async (req, res) => {
+  const deleted = await pool.query('DELETE FROM cards WHERE id = $1', [req.params.id]);
+  if (!deleted.rowCount) return res.status(404).json({ error: 'not found' });
+  res.status(204).end();
+});
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(ROOT, 'index.html'));
+});
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: 'internal_server_error' });
+});
+
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`oasis-board listening on ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });

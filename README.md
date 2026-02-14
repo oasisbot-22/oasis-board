@@ -1,46 +1,44 @@
 # Oasis Board
 
-Mobile-first Kanban board (plain HTML/CSS/JS, no build step) with:
+Shared Kanban board (plain HTML/CSS/JS + Node API) with Railway Postgres persistence.
 
-- Default 3-column board: **To Do**, **Doing**, **Done**
-- Top view tabs: **Board**, **Backlog**, **Historial**
+## Features
+
+- 3-column board: **To Do**, **Doing**, **Done**
+- Tabs: **Board**, **Backlog**, **Historial**
 - Cards with title, optional description, checklist items
-- Create cards in **To Do**
-- Edit cards
-- Add/remove checklist items
-- Check/uncheck checklist items
-- Desktop drag-and-drop between columns
-- Mobile touch drag-and-drop with finger between columns (pointer events)
-- Auto-rule: when checklist is not empty and all items are checked, card moves to **Done**
-- Done cards older than 2 days move out of the main board and appear in **Historial**
-- **Backlog** view shows all current **To Do** cards in one place
-- Persistence with `localStorage`
-- PWA support: manifest, service worker cache, installable app metadata/icons
+- Desktop drag-and-drop + mobile touch drag-and-drop
+- Auto-rule: if checklist is not empty and all items are checked, card auto-moves to **Done**
+- **Backlog** = cards currently in **To Do**
+- **Historial** = done cards older than 2 days
+- Single source of truth via API + Postgres (no per-device divergence)
+- PWA assets kept (manifest + service worker)
 
-## Run locally
+## API routes
 
-From this folder:
+- `GET /api/health` — health check
+- `GET /api/cards` — list cards
+- `POST /api/cards` — create card
+- `PATCH /api/cards/:id` — update title/description/checklist/column
+- `PATCH /api/cards/:id/column` — move between `todo|doing|done`
+- `PATCH /api/cards/:id/checklist` — replace checklist and apply auto-done rule
+- `DELETE /api/cards/:id` — delete card
+
+## Seeded initial tasks
+
+On first DB init (empty DB), these cards are inserted in **To Do**:
+
+1. Fix mobile UX touch drag + vertical columns
+2. Deploy live verified
+3. Validate Backlog+Historial in prod
+4. Share final link
+
+## Railway deploy
+
+This app expects `DATABASE_URL` to be set (Railway Postgres service/plugin).
+
+Start command:
 
 ```bash
-python3 -m http.server 8000
+npm start
 ```
-
-Then open:
-
-- http://localhost:8000
-
-## Test on phone (same Wi-Fi)
-
-1. Find your computer local IP (example `192.168.1.20`)
-2. Start server: `python3 -m http.server 8000`
-3. On phone open `http://192.168.1.20:8000`
-4. For install prompt/A2HS, use browser menu → **Add to Home Screen**
-
-## Files
-
-- `index.html` – app structure + PWA tags
-- `styles.css` – mobile-first responsive UI styles
-- `app.js` – app logic + persistence + service worker registration
-- `manifest.webmanifest` – install metadata and icons
-- `service-worker.js` – offline cache behavior
-- `icons/icon-192.png` and `icons/icon-512.png` – placeholder app icons

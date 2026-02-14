@@ -1,10 +1,14 @@
 {
   "name": "oasis-board",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Static oasis board app",
+  "description": "Oasis board with shared API persistence",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
   }
 }
