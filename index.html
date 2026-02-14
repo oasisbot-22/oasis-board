@@ -2,8 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Oasis Board</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -58,7 +64,15 @@
       <article class="card" draggable="true">
         <div class="card-top">
           <h3 class="card-title"></h3>
-          <button class="edit-btn" type="button">Edit</button>
+          <div class="card-actions">
+            <button class="move-toggle-btn" type="button" aria-expanded="false">Move</button>
+            <button class="edit-btn" type="button">Edit</button>
+          </div>
+        </div>
+        <div class="move-menu" hidden>
+          <button type="button" data-move="todo">To Do</button>
+          <button type="button" data-move="doing">Doing</button>
+          <button type="button" data-move="done">Done</button>
         </div>
         <p class="card-desc"></p>
         <ul class="checklist"></ul>

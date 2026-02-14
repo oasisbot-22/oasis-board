@@ -79,10 +79,24 @@ function render() {
 
     node.querySelector('.edit-btn').addEventListener('click', () => openEditor(card.id));
 
-    node.addEventListener('dragstart', () => {
-      node.classList.add('dragging');
-      node.dataTransfer = node.dataTransfer;
+    const moveToggleBtn = node.querySelector('.move-toggle-btn');
+    const moveMenu = node.querySelector('.move-menu');
+    moveToggleBtn.addEventListener('click', () => {
+      const isOpen = !moveMenu.hidden;
+      moveMenu.hidden = isOpen;
+      moveToggleBtn.setAttribute('aria-expanded', String(!isOpen));
     });
+
+    moveMenu.querySelectorAll('button[data-move]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.column = btn.dataset.move;
+        moveToDoneIfChecklistComplete(card);
+        saveState();
+        render();
+      });
+    });
+
+    node.addEventListener('dragstart', () => node.classList.add('dragging'));
     node.addEventListener('dragend', () => node.classList.remove('dragging'));
 
     lists[card.column].append(node);
@@ -202,6 +216,12 @@ for (const column of document.querySelectorAll('.column')) {
     moveToDoneIfChecklistComplete(card);
     saveState();
     render();
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   });
 }
 

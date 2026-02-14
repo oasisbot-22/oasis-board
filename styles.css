@@ -20,24 +20,25 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: .75rem;
+  padding: .85rem;
   background: var(--panel);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 20;
 }
 
-h1 { margin: 0; font-size: 1.2rem; }
-h2 { margin: 0 0 .75rem; font-size: 1rem; }
+h1 { margin: 0; font-size: 1.05rem; }
+h2 { margin: 0 0 .75rem; font-size: .95rem; }
 
 button {
   border: 1px solid var(--border);
   background: #fff;
-  border-radius: .5rem;
-  padding: .4rem .7rem;
+  border-radius: .55rem;
+  padding: .45rem .7rem;
   cursor: pointer;
+  font: inherit;
 }
 button:hover { background: #f3f4f6; }
 button.primary {
@@ -49,10 +50,12 @@ button.primary:hover { background: var(--primary-dark); }
 
 .board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(82vw, 1fr);
+  gap: .85rem;
+  padding: .85rem;
   overflow-x: auto;
+  scroll-snap-type: x proximity;
 }
 
 .column {
@@ -60,7 +63,8 @@ button.primary:hover { background: var(--primary-dark); }
   border: 1px solid var(--border);
   border-radius: .75rem;
   padding: .75rem;
-  min-height: 70vh;
+  min-height: calc(100dvh - 110px);
+  scroll-snap-align: start;
 }
 
 .card-list {
@@ -84,6 +88,12 @@ button.primary:hover { background: var(--primary-dark); }
   gap: .5rem;
   align-items: start;
 }
+.card-actions {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
 .card-title { margin: 0; font-size: .95rem; }
 .card-desc {
@@ -92,6 +102,17 @@ button.primary:hover { background: var(--primary-dark); }
   white-space: pre-wrap;
 }
 .card-desc:empty { display: none; }
+
+.move-menu {
+  margin-top: .5rem;
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+.move-menu button {
+  padding: .3rem .55rem;
+  font-size: .85rem;
+}
 
 .checklist {
   margin: .25rem 0 0;
@@ -154,7 +175,17 @@ menu {
   gap: .5rem;
 }
 
-@media (max-width: 860px) {
-  .board { grid-template-columns: 1fr; }
-  .column { min-height: auto; }
+@media (min-width: 861px) {
+  .board {
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .column { min-height: 70vh; }
+  .move-toggle-btn,
+  .move-menu { display: none; }
 }
