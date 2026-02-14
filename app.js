@@ -33,7 +33,7 @@ const cancelBtn = document.getElementById('cancelBtn');
 const cardTemplate = document.getElementById('cardTemplate');
 const versionBadgeEl = document.getElementById('runtimeVersion');
 
-const APP_VERSION = window.__APP_VERSION__ || 'dev';
+const APP_VERSION = window.APP_VERSION || window.__APP_VERSION__ || 'dev';
 
 let state = { cards: [] };
 let editingId = null;
