@@ -36,6 +36,16 @@ const companyFilterToggle = document.getElementById('companyFilterToggle');
 const companyFilterPopover = document.getElementById('companyFilterPopover');
 const companyFilterButtons = Array.from(document.querySelectorAll('[data-company-filter]'));
 
+const themeToggle = document.getElementById('themeToggle');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+const THEME_STORAGE_KEY = 'oasisBoard.theme';
+const THEME_OPTIONS = new Set(['light', 'dark']);
+const THEME_META_COLORS = {
+  light: '#2563eb',
+  dark: '#0f1f33',
+};
+
 const APP_VERSION = window.APP_VERSION || window.__APP_VERSION__ || 'dev';
 const COLUMN_ORDER = ['backlog', 'todo', 'doing', 'done', 'history'];
 const VIEW_ORDER = ['backlog', 'board', 'history'];
@@ -87,6 +97,49 @@ const COMPANY_LABELS = {
 };
 const COMPANY_FILTER_OPTIONS = new Set(['all', 'vault', 'otc']);
 const COMPANY_FILTER_STORAGE_KEY = 'oasisBoard.companyFilter';
+
+let hasManualThemePreference = false;
+const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+function getSystemPreferredTheme() {
+  return systemThemeQuery?.matches ? 'dark' : 'light';
+}
+
+function loadStoredTheme() {
+  try {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (THEME_OPTIONS.has(savedTheme)) {
+      hasManualThemePreference = true;
+      return savedTheme;
+    }
+  } catch {}
+  return null;
+}
+
+function persistTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {}
+}
+
+function updateThemeToggle(theme) {
+  if (!themeToggle) return;
+  const isDark = theme === 'dark';
+  themeToggle.textContent = isDark ? '☀️' : '🌙';
+  themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+  themeToggle.setAttribute('aria-pressed', String(isDark));
+}
+
+function applyTheme(theme, { persist = true, manual = true } = {}) {
+  if (!THEME_OPTIONS.has(theme)) return;
+  document.documentElement.setAttribute('data-theme', theme);
+  if (themeColorMeta) themeColorMeta.setAttribute('content', THEME_META_COLORS[theme] || THEME_META_COLORS.light);
+  updateThemeToggle(theme);
+
+  if (persist) persistTheme(theme);
+  if (manual) hasManualThemePreference = true;
+}
 
 const OASIS_VAULT_KEYWORDS = [
   'oasis vault',
@@ -1111,6 +1164,31 @@ if ('serviceWorker' in navigator) {
       registration.update().catch(() => {});
     } catch {}
   });
+}
+
+
+const initialTheme = loadStoredTheme() || getSystemPreferredTheme();
+applyTheme(initialTheme, { persist: false, manual: hasManualThemePreference });
+
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme, { persist: true, manual: true });
+  });
+}
+
+if (systemThemeQuery) {
+  const onSystemThemeChange = (event) => {
+    if (hasManualThemePreference) return;
+    applyTheme(event.matches ? 'dark' : 'light', { persist: false, manual: false });
+  };
+
+  if (typeof systemThemeQuery.addEventListener === 'function') {
+    systemThemeQuery.addEventListener('change', onSystemThemeChange);
+  } else if (typeof systemThemeQuery.addListener === 'function') {
+    systemThemeQuery.addListener(onSystemThemeChange);
+  }
 }
 
 activeCompanyFilter = loadCompanyFilter();

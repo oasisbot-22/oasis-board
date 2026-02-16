@@ -18,22 +18,33 @@
     <div class="app-shell">
       <header class="app-header">
         <h1>Oasis Board</h1>
-        <div class="company-filter-menu">
+        <div class="header-controls">
           <button
-            id="companyFilterToggle"
-            class="company-filter-toggle"
+            id="themeToggle"
+            class="theme-toggle"
             type="button"
-            aria-label="Filter by company"
-            aria-haspopup="true"
-            aria-expanded="false"
-            title="Filter by company"
+            aria-label="Switch to dark mode"
+            title="Switch to dark mode"
           >
-            ⛃
+            🌙
           </button>
-          <div id="companyFilterPopover" class="company-filter-popover" role="menu" aria-label="Filter tasks by company" hidden>
-            <button class="company-filter-btn active" data-company-filter="all" type="button" role="menuitemradio" aria-pressed="true">Todas</button>
-            <button class="company-filter-btn" data-company-filter="vault" type="button" role="menuitemradio" aria-pressed="false">Oasis Vault</button>
-            <button class="company-filter-btn" data-company-filter="otc" type="button" role="menuitemradio" aria-pressed="false">THE OTC DESK</button>
+          <div class="company-filter-menu">
+            <button
+              id="companyFilterToggle"
+              class="company-filter-toggle"
+              type="button"
+              aria-label="Filter by company"
+              aria-haspopup="true"
+              aria-expanded="false"
+              title="Filter by company"
+            >
+              ⛃
+            </button>
+            <div id="companyFilterPopover" class="company-filter-popover" role="menu" aria-label="Filter tasks by company" hidden>
+              <button class="company-filter-btn active" data-company-filter="all" type="button" role="menuitemradio" aria-pressed="true">Todas</button>
+              <button class="company-filter-btn" data-company-filter="vault" type="button" role="menuitemradio" aria-pressed="false">Oasis Vault</button>
+              <button class="company-filter-btn" data-company-filter="otc" type="button" role="menuitemradio" aria-pressed="false">THE OTC DESK</button>
+            </div>
           </div>
         </div>
       </header>
