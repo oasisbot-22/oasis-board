@@ -465,7 +465,17 @@ function openEditor(cardId = null, preferredColumn = null) {
   draftChecklist = card ? card.checklist.map((i) => ({ ...i })) : [];
   renderChecklistEditor();
 
-  if (typeof dialog.showModal === 'function') dialog.showModal();
+  if (typeof dialog.showModal === 'function') {
+    dialog.showModal();
+    requestAnimationFrame(() => {
+      if (!dialog.open) return;
+      try {
+        dialog.focus({ preventScroll: true });
+      } catch {
+        dialog.focus();
+      }
+    });
+  }
 }
 
 function closeEditor() {
