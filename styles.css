@@ -307,7 +307,7 @@ body.drag-mode-lock * {
   margin: 0;
 }
 
-.advance-checkbox,
+.advance-btn,
 .edit-btn {
   width: 2.2rem;
   height: 2.2rem;
@@ -320,41 +320,28 @@ body.drag-mode-lock * {
   -webkit-tap-highlight-color: transparent;
 }
 
-.advance-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
+.advance-btn {
   display: grid;
   place-items: center;
   margin: 0;
-  position: relative;
+  padding: 0;
+  color: var(--primary);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.advance-checkbox::after {
-  content: '';
-  width: .5rem;
-  height: .9rem;
-  border-right: 2px solid #fff;
-  border-bottom: 2px solid #fff;
-  transform: rotate(45deg) scale(0);
-  transform-origin: center;
-  transition: transform .12s ease;
-}
-
-.advance-checkbox:checked {
-  background: var(--primary);
+.advance-btn:hover:not(:disabled) {
+  background: #f7faff;
   border-color: var(--primary);
 }
 
-.advance-checkbox:checked::after {
-  transform: rotate(45deg) scale(1);
-}
-
-.advance-checkbox:disabled {
+.advance-btn:disabled {
   opacity: .45;
   cursor: not-allowed;
 }
 
-.advance-checkbox:focus-visible,
+.advance-btn:focus-visible,
 .edit-btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;

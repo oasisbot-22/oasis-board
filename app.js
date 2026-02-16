@@ -343,13 +343,11 @@ function createCardNode(card, { draggable = false } = {}) {
   const descEl = node.querySelector('.card-desc');
   renderTextWithLinks(descEl, card.description || '');
 
-  const advanceCheckbox = node.querySelector('.advance-checkbox');
+  const advanceBtn = node.querySelector('.advance-btn');
   const nextColumn = getNextColumn(card.column);
-  if (advanceCheckbox) {
-    advanceCheckbox.checked = false;
-    advanceCheckbox.disabled = !nextColumn;
-    advanceCheckbox.addEventListener('change', async () => {
-      advanceCheckbox.checked = false;
+  if (advanceBtn) {
+    advanceBtn.disabled = !nextColumn;
+    advanceBtn.addEventListener('click', async () => {
       if (!nextColumn) return;
       try {
         await moveCardToColumn(card.id, nextColumn);
