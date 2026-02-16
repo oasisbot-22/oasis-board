@@ -1,73 +1,79 @@
 :root {
   color-scheme: light;
 
+  /* Official Oasis palette */
+  --oasis-blue: #0039F8;
+  --oasis-green: #27FA7B;
+  --oasis-cultured: #F4F4F5;
+  --oasis-jet: #323232;
+
   /* Neutral foundation */
-  --bg: #f3f6fb;
-  --bg-elevated: #eef3fa;
-  --surface: #ffffff;
-  --surface-soft: #f8fafc;
-  --surface-header-mix: #f8fbff;
-  --column-top: #ffffff;
-  --column-bottom: #fbfdff;
-  --text: #0f172a;
-  --text-soft: #475569;
-  --text-faint: #64748b;
-  --border: #d8e1ee;
-  --border-strong: #c4d0e1;
+  --bg: color-mix(in srgb, var(--oasis-cultured) 88%, white 12%);
+  --bg-elevated: color-mix(in srgb, var(--oasis-cultured) 94%, var(--oasis-blue) 6%);
+  --surface: #FFFFFF;
+  --surface-soft: color-mix(in srgb, var(--oasis-cultured) 92%, white 8%);
+  --surface-header-mix: color-mix(in srgb, var(--oasis-cultured) 84%, var(--oasis-blue) 16%);
+  --column-top: #FFFFFF;
+  --column-bottom: color-mix(in srgb, var(--oasis-cultured) 90%, white 10%);
+  --text: color-mix(in srgb, var(--oasis-jet) 92%, black 8%);
+  --text-soft: color-mix(in srgb, var(--oasis-jet) 78%, var(--oasis-blue) 22%);
+  --text-faint: color-mix(in srgb, var(--oasis-jet) 62%, var(--oasis-blue) 38%);
+  --border: color-mix(in srgb, var(--oasis-cultured) 60%, var(--oasis-blue) 40%);
+  --border-strong: color-mix(in srgb, var(--oasis-cultured) 45%, var(--oasis-blue) 55%);
 
   /* Brand accents */
-  --accent-vault-50: #ecfdf3;
-  --accent-vault-200: #9ee6b8;
-  --accent-vault-500: #16a34a;
-  --accent-vault-600: #15803d;
+  --accent-vault-50: color-mix(in srgb, var(--oasis-green) 20%, white 80%);
+  --accent-vault-200: color-mix(in srgb, var(--oasis-green) 55%, white 45%);
+  --accent-vault-500: var(--oasis-green);
+  --accent-vault-600: color-mix(in srgb, var(--oasis-green) 82%, var(--oasis-jet) 18%);
 
-  --accent-otc-50: #eff6ff;
-  --accent-otc-200: #bfdbfe;
-  --accent-500: #2563eb;
-  --accent-600: #1d4ed8;
+  --accent-otc-50: color-mix(in srgb, var(--oasis-blue) 10%, white 90%);
+  --accent-otc-200: color-mix(in srgb, var(--oasis-blue) 28%, white 72%);
+  --accent-500: var(--oasis-blue);
+  --accent-600: color-mix(in srgb, var(--oasis-blue) 82%, black 18%);
 
-  --accent-focus: #1d4ed8;
+  --accent-focus: var(--oasis-blue);
 
   --radius-sm: .5rem;
   --radius-md: .75rem;
   --radius-lg: .95rem;
 
-  --shadow-xs: 0 1px 1px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 14px 28px rgba(15, 23, 42, 0.12);
+  --shadow-xs: 0 1px 1px rgba(50, 50, 50, 0.05);
+  --shadow-sm: 0 6px 18px rgba(50, 50, 50, 0.1);
+  --shadow-md: 0 14px 28px rgba(50, 50, 50, 0.14);
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #071322;
-  --bg-elevated: #0c1a2e;
-  --surface: #122338;
-  --surface-soft: #192f49;
-  --surface-header-mix: #122842;
-  --column-top: #142840;
-  --column-bottom: #0f1f33;
-  --text: #eff6ff;
-  --text-soft: #c7d5e8;
-  --text-faint: #9ab0c8;
-  --border: #27445f;
-  --border-strong: #376184;
+  --bg: color-mix(in srgb, var(--oasis-jet) 92%, black 8%);
+  --bg-elevated: color-mix(in srgb, var(--oasis-jet) 82%, var(--oasis-blue) 18%);
+  --surface: color-mix(in srgb, var(--oasis-jet) 76%, var(--oasis-blue) 24%);
+  --surface-soft: color-mix(in srgb, var(--oasis-jet) 66%, var(--oasis-blue) 34%);
+  --surface-header-mix: color-mix(in srgb, var(--oasis-jet) 70%, var(--oasis-blue) 30%);
+  --column-top: color-mix(in srgb, var(--oasis-jet) 72%, var(--oasis-blue) 28%);
+  --column-bottom: color-mix(in srgb, var(--oasis-jet) 82%, var(--oasis-blue) 18%);
+  --text: color-mix(in srgb, var(--oasis-cultured) 92%, white 8%);
+  --text-soft: color-mix(in srgb, var(--oasis-cultured) 74%, var(--oasis-blue) 26%);
+  --text-faint: color-mix(in srgb, var(--oasis-cultured) 58%, var(--oasis-blue) 42%);
+  --border: color-mix(in srgb, var(--oasis-blue) 48%, var(--oasis-jet) 52%);
+  --border-strong: color-mix(in srgb, var(--oasis-blue) 62%, var(--oasis-jet) 38%);
 
-  --accent-vault-50: #113425;
-  --accent-vault-200: #1d6b4a;
-  --accent-vault-500: #34d399;
-  --accent-vault-600: #10b981;
+  --accent-vault-50: color-mix(in srgb, var(--oasis-green) 20%, var(--oasis-jet) 80%);
+  --accent-vault-200: color-mix(in srgb, var(--oasis-green) 42%, var(--oasis-jet) 58%);
+  --accent-vault-500: color-mix(in srgb, var(--oasis-green) 84%, white 16%);
+  --accent-vault-600: var(--oasis-green);
 
-  --accent-otc-50: #102a4a;
-  --accent-otc-200: #1f4f84;
-  --accent-500: #60a5fa;
-  --accent-600: #3b82f6;
+  --accent-otc-50: color-mix(in srgb, var(--oasis-blue) 38%, var(--oasis-jet) 62%);
+  --accent-otc-200: color-mix(in srgb, var(--oasis-blue) 56%, var(--oasis-jet) 44%);
+  --accent-500: color-mix(in srgb, var(--oasis-blue) 78%, white 22%);
+  --accent-600: color-mix(in srgb, var(--oasis-blue) 64%, white 36%);
 
-  --accent-focus: #93c5fd;
+  --accent-focus: color-mix(in srgb, var(--oasis-blue) 58%, white 42%);
 
-  --shadow-xs: 0 1px 1px rgba(2, 8, 23, 0.4);
-  --shadow-sm: 0 10px 20px rgba(2, 8, 23, 0.45);
-  --shadow-md: 0 18px 32px rgba(2, 8, 23, 0.5);
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.42);
+  --shadow-sm: 0 10px 20px rgba(0, 0, 0, 0.46);
+  --shadow-md: 0 18px 32px rgba(0, 0, 0, 0.52);
 }
 
 * {
@@ -164,12 +170,12 @@ button:focus-visible {
 button.primary {
   background: linear-gradient(180deg, var(--accent-500), var(--accent-600));
   border-color: var(--accent-600);
-  color: #fff;
-  box-shadow: 0 8px 16px rgba(29, 78, 216, .25);
+  color: #FFFFFF;
+  box-shadow: 0 8px 16px rgba(0, 57, 248, .28);
 }
 
 button.primary:hover {
-  background: linear-gradient(180deg, #2b6aee, var(--accent-600));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-500) 82%, white 18%), var(--accent-600));
 }
 
 .view-tabs {
@@ -383,7 +389,7 @@ button.primary:hover {
 
 .card {
   --company-marker: transparent;
-  --company-badge-bg: #f3f4f6;
+  --company-badge-bg: color-mix(in srgb, var(--oasis-cultured) 88%, white 12%);
   --company-badge-text: var(--text-soft);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -413,9 +419,9 @@ button.primary:hover {
 }
 
 .card-company-otros {
-  --company-marker: color-mix(in srgb, #a78bfa 72%, var(--surface) 28%);
-  --company-badge-bg: color-mix(in srgb, #a78bfa 22%, var(--surface) 78%);
-  --company-badge-text: #6d28d9;
+  --company-marker: color-mix(in srgb, var(--oasis-jet) 55%, var(--oasis-blue) 45%);
+  --company-badge-bg: color-mix(in srgb, var(--oasis-cultured) 72%, var(--oasis-blue) 28%);
+  --company-badge-text: color-mix(in srgb, var(--oasis-jet) 70%, var(--oasis-blue) 30%);
 }
 
 .card.dragging,
@@ -659,7 +665,7 @@ dialog::backdrop {
 }
 
 #companyInput option[value="otros"] {
-  color: #6d28d9;
+  color: color-mix(in srgb, var(--oasis-jet) 70%, var(--oasis-blue) 30%);
   font-weight: 600;
 }
 
