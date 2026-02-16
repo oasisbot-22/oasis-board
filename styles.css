@@ -222,6 +222,10 @@ button.primary:hover { background: var(--primary-dark); }
   --company-marker: rgba(37, 99, 235, 0.55);
 }
 
+.card-company-otros {
+  --company-marker: rgba(147, 51, 234, 0.6);
+}
+
 .card.dragging,
 .card.touch-drag-source { opacity: .5; }
 
@@ -270,6 +274,23 @@ body.drag-mode-lock * {
   align-items: start;
   min-width: 0;
 }
+
+.card-heading {
+  min-width: 0;
+}
+
+.card-company-label {
+  display: inline-block;
+  margin-top: .2rem;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--company-marker);
+}
+
+.card-company-otros .card-company-label {
+  color: #7e22ce;
+}
+
 .card-actions {
   display: flex;
   flex-direction: row;
@@ -361,6 +382,10 @@ body.drag-mode-lock * {
   word-break: break-word;
 }
 .card-desc:empty { display: none; }
+.card-desc a {
+  color: #2563eb;
+  text-decoration: underline;
+}
 
 .checklist {
   margin: .25rem 0 0;
@@ -402,6 +427,11 @@ dialog {
   border-radius: .5rem;
   padding: .55rem;
   font: inherit;
+}
+
+#companyInput option[value="otros"] {
+  color: #7e22ce;
+  font-weight: 600;
 }
 
 .checklist-editor {

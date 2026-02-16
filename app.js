@@ -26,6 +26,7 @@ const dialogTitle = document.getElementById('dialogTitle');
 const titleInput = document.getElementById('titleInput');
 const descInput = document.getElementById('descInput');
 const columnInput = document.getElementById('columnInput');
+const companyInput = document.getElementById('companyInput');
 const addItemBtn = document.getElementById('addItemBtn');
 const editChecklist = document.getElementById('editChecklist');
 const cancelBtn = document.getElementById('cancelBtn');
@@ -73,6 +74,13 @@ const swipeState = {
 
 const dragLockClass = 'drag-mode-lock';
 let dragLockHolders = 0;
+
+const COMPANY_OPTIONS = new Set(['otc', 'vault', 'otros']);
+const COMPANY_LABELS = {
+  otc: 'The OTC Desk',
+  vault: 'Oasis Vault',
+  otros: 'Otros',
+};
 
 const OASIS_VAULT_KEYWORDS = [
   'oasis vault',
@@ -127,7 +135,7 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function classifyCardCompany(card) {
+function inferCompanyFromContent(card) {
   const haystack = `${card.title || ''} ${card.description || ''}`.toLowerCase();
 
   if (OASIS_VAULT_KEYWORDS.some((keyword) => haystack.includes(keyword))) {
@@ -138,8 +146,43 @@ function classifyCardCompany(card) {
     return 'otc';
   }
 
-  // Deterministic fallback so every card has a visible company marker.
-  return 'otc';
+  return 'otros';
+}
+
+function normalizeCardCompany(card) {
+  const rawCompany = String(card?.company || '').trim().toLowerCase();
+  if (COMPANY_OPTIONS.has(rawCompany)) return rawCompany;
+  return inferCompanyFromContent(card);
+}
+
+function renderTextWithLinks(container, text) {
+  container.textContent = '';
+  if (!text) return;
+
+  const regex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      container.append(document.createTextNode(text.slice(lastIndex, match.index)));
+    }
+
+    const value = match[0];
+    const href = value.startsWith('www.') ? `https://${value}` : value;
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.textContent = value;
+    container.append(anchor);
+
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    container.append(document.createTextNode(text.slice(lastIndex)));
+  }
 }
 
 async function api(path, options = {}) {
@@ -269,14 +312,19 @@ function createCardNode(card, { draggable = false } = {}) {
   const node = cardTemplate.content.firstElementChild.cloneNode(true);
   node.dataset.id = card.id;
 
-  const company = classifyCardCompany(card);
+  const company = normalizeCardCompany(card);
   node.dataset.company = company;
   node.classList.add(`card-company-${company}`);
 
   if (!draggable) node.draggable = false;
 
   node.querySelector('.card-title').textContent = card.title;
-  node.querySelector('.card-desc').textContent = card.description || '';
+
+  const companyLabel = node.querySelector('.card-company-label');
+  if (companyLabel) companyLabel.textContent = COMPANY_LABELS[company] || COMPANY_LABELS.otros;
+
+  const descEl = node.querySelector('.card-desc');
+  renderTextWithLinks(descEl, card.description || '');
 
   const advanceCheckbox = node.querySelector('.advance-checkbox');
   const nextColumn = getNextColumn(card.column);
@@ -413,6 +461,7 @@ function openEditor(cardId = null, preferredColumn = null) {
   titleInput.value = card?.title || '';
   descInput.value = card?.description || '';
   columnInput.value = card?.column || preferredColumn || 'backlog';
+  companyInput.value = normalizeCardCompany(card || {});
   draftChecklist = card ? card.checklist.map((i) => ({ ...i })) : [];
   renderChecklistEditor();
 
@@ -786,6 +835,7 @@ form.addEventListener('submit', async (e) => {
 
   const description = descInput.value.trim();
   const column = columnInput.value;
+  const company = normalizeCardCompany({ company: companyInput.value });
   const checklist = draftChecklist
     .map((i) => ({ ...i, text: (i.text || '').trim() }))
     .filter((i) => i.text.length > 0);
@@ -794,12 +844,12 @@ form.addEventListener('submit', async (e) => {
     if (editingId) {
       await api(`/api/cards/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ title, description, checklist, column }),
+        body: JSON.stringify({ title, description, checklist, column, company }),
       });
     } else {
       await api('/api/cards', {
         method: 'POST',
-        body: JSON.stringify({ title, description, checklist, column }),
+        body: JSON.stringify({ title, description, checklist, column, company }),
       });
     }
 

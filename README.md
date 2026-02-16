@@ -20,7 +20,7 @@ Shared Kanban board (plain HTML/CSS/JS + Node API) with Railway Postgres persist
 - `GET /api/cards` — list cards
 - `POST /api/cards` — create card
 - `PATCH /api/cards/:id` — update title/description/checklist/column
-- `PATCH /api/cards/:id/column` — move between `todo|doing|done`
+- `PATCH /api/cards/:id/column` — move between `backlog|todo|doing|done|history`
 - `PATCH /api/cards/:id/checklist` — replace checklist and apply auto-done rule
 - `DELETE /api/cards/:id` — delete card
 

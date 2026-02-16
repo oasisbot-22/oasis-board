@@ -18,12 +18,11 @@
     <div class="app-shell">
       <header class="app-header">
         <h1>Oasis Board</h1>
-        <button id="newCardBtn" class="primary">+ New Card</button>
       </header>
 
       <nav class="view-tabs" aria-label="Views">
-        <button id="boardTab" class="tab-btn active" data-view="board" type="button">Board</button>
         <button id="backlogTab" class="tab-btn" data-view="backlog" type="button">Backlog</button>
+        <button id="boardTab" class="tab-btn active" data-view="board" type="button">Board</button>
         <button id="historyTab" class="tab-btn" data-view="history" type="button">Historial</button>
       </nav>
 
@@ -34,15 +33,24 @@
       <main id="boardView" class="view-panel active">
         <div class="board" id="board">
           <section class="column" data-column="todo">
-            <h2>To Do</h2>
+            <div class="column-head">
+              <h2>To Do</h2>
+              <button class="add-card-btn" data-column="todo" type="button" aria-label="Add card to To Do">+</button>
+            </div>
             <div class="card-list" id="todoList"></div>
           </section>
           <section class="column" data-column="doing">
-            <h2>Doing</h2>
+            <div class="column-head">
+              <h2>Doing</h2>
+              <button class="add-card-btn" data-column="doing" type="button" aria-label="Add card to Doing">+</button>
+            </div>
             <div class="card-list" id="doingList"></div>
           </section>
           <section class="column" data-column="done">
-            <h2>Done</h2>
+            <div class="column-head">
+              <h2>Done</h2>
+              <button class="add-card-btn" data-column="done" type="button" aria-label="Add card to Done">+</button>
+            </div>
             <div class="card-list" id="doneList"></div>
           </section>
         </div>
@@ -50,7 +58,10 @@
 
       <section id="backlogView" class="view-panel" aria-label="Backlog view">
         <div class="panel-wrap">
-          <h2>Backlog</h2>
+          <div class="column-head">
+            <h2>Backlog</h2>
+            <button class="add-card-btn" data-column="backlog" type="button" aria-label="Add card to Backlog">+</button>
+          </div>
           <p class="panel-note">Backlog is now a dedicated column for queued work.</p>
           <div class="card-list" id="backlogList"></div>
         </div>
@@ -58,7 +69,10 @@
 
       <section id="historyView" class="view-panel" aria-label="History view">
         <div class="panel-wrap">
-          <h2>Historial</h2>
+          <div class="column-head">
+            <h2>Historial</h2>
+            <button class="add-card-btn" data-column="history" type="button" aria-label="Add card to Historial">+</button>
+          </div>
           <p class="panel-note">Cards can be moved here manually, and Done cards older than 2 days are auto-archived here.</p>
           <div class="card-list" id="historyList"></div>
         </div>
@@ -92,6 +106,15 @@
           </select>
         </label>
 
+        <label>
+          Company
+          <select id="companyInput">
+            <option value="otc">The OTC Desk</option>
+            <option value="vault">Oasis Vault</option>
+            <option value="otros">Otros</option>
+          </select>
+        </label>
+
         <div class="checklist-editor">
           <div class="checklist-header">
             <span>Checklist</span>
@@ -110,9 +133,15 @@
     <template id="cardTemplate">
       <article class="card" draggable="true">
         <div class="card-top">
-          <h3 class="card-title"></h3>
+          <div class="card-heading">
+            <h3 class="card-title"></h3>
+            <span class="card-company-label"></span>
+          </div>
           <div class="card-actions">
-            <button class="edit-btn" type="button">Edit</button>
+            <label class="advance-control" title="Advance to next stage">
+              <input class="advance-checkbox" type="checkbox" aria-label="Advance card to next stage" />
+            </label>
+            <button class="edit-btn" type="button" aria-label="Edit card" title="Edit card">⚙</button>
           </div>
         </div>
         <p class="card-desc"></p>

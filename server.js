@@ -48,6 +48,7 @@ app.use(
 );
 
 const ALLOWED_COLUMNS = new Set(['backlog', 'todo', 'doing', 'done', 'history']);
+const ALLOWED_COMPANIES = new Set(['otc', 'vault', 'otros']);
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -62,6 +63,12 @@ function normalizeChecklist(list) {
       checked: Boolean(item?.checked),
     }))
     .filter((i) => i.text.length > 0);
+}
+
+function normalizeCompany(company, fallback = 'otros') {
+  const value = String(company || '').trim().toLowerCase();
+  if (ALLOWED_COMPANIES.has(value)) return value;
+  return ALLOWED_COMPANIES.has(fallback) ? fallback : 'otros';
 }
 
 function applyChecklistRule(column, checklist, doneAt) {
@@ -91,6 +98,7 @@ function toCard(row) {
     title: row.title,
     description: row.description || '',
     checklist: Array.isArray(row.checklist) ? row.checklist : [],
+    company: normalizeCompany(row.company, 'otros'),
     column: row.card_column,
     doneAt: row.done_at ? Number(row.done_at) : null,
     createdAt: Number(row.created_at),
@@ -134,6 +142,21 @@ async function initDb() {
   `);
 
   await pool.query(`
+    ALTER TABLE cards
+    ADD COLUMN IF NOT EXISTS company TEXT NOT NULL DEFAULT 'otros';
+  `);
+
+  await pool.query(`
+    UPDATE cards
+    SET company = CASE
+      WHEN LOWER(title || ' ' || description) ~ '(oasis vault|\mvault\M|oasisboard|oasis board|\moasis\M)' THEN 'vault'
+      WHEN LOWER(title || ' ' || description) ~ '(the otc desk|otc desk|\motc\M|ficein|rail|provider)' THEN 'otc'
+      ELSE 'otros'
+    END
+    WHERE company IS NULL OR company NOT IN ('otc', 'vault', 'otros');
+  `);
+
+  await pool.query(`
     DO $$
     DECLARE
       r RECORD;
@@ -157,6 +180,30 @@ async function initDb() {
     CHECK (card_column IN ('backlog', 'todo', 'doing', 'done', 'history'));
   `);
 
+  await pool.query(`
+    DO $$
+    DECLARE
+      r RECORD;
+    BEGIN
+      FOR r IN
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+        WHERE c.conrelid = 'cards'::regclass
+          AND c.contype = 'c'
+          AND a.attname = 'company'
+      LOOP
+        EXECUTE format('ALTER TABLE cards DROP CONSTRAINT %I', r.conname);
+      END LOOP;
+    END $$;
+  `);
+
+  await pool.query(`
+    ALTER TABLE cards
+    ADD CONSTRAINT cards_company_check
+    CHECK (company IN ('otc', 'vault', 'otros'));
+  `);
+
   const existing = await pool.query('SELECT COUNT(*)::int AS count FROM cards');
   if (existing.rows[0].count === 0) {
     const seedTitles = [
@@ -169,9 +216,9 @@ async function initDb() {
     const now = Date.now();
     for (const title of seedTitles) {
       await pool.query(
-        `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [uid(), title, '', JSON.stringify([]), 'backlog', null, now, now],
+        `INSERT INTO cards (id, title, description, checklist, company, card_column, done_at, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [uid(), title, '', JSON.stringify([]), 'otros', 'backlog', null, now, now],
       );
     }
   }
@@ -211,6 +258,7 @@ app.post('/api/cards', async (req, res) => {
 
   const description = String(req.body?.description || '').trim();
   const checklist = normalizeChecklist(req.body?.checklist);
+  const company = normalizeCompany(req.body?.company, 'otros');
   const requestedColumn = String(req.body?.column || 'backlog');
   const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : 'backlog';
   const { column, doneAt } = applyChecklistRule(baseColumn, checklist, null);
@@ -220,6 +268,7 @@ app.post('/api/cards', async (req, res) => {
     title,
     description,
     checklist,
+    company,
     column,
     doneAt,
     createdAt: Date.now(),
@@ -227,13 +276,14 @@ app.post('/api/cards', async (req, res) => {
   };
 
   await pool.query(
-    `INSERT INTO cards (id, title, description, checklist, card_column, done_at, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    `INSERT INTO cards (id, title, description, checklist, company, card_column, done_at, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [
       card.id,
       card.title,
       card.description,
       JSON.stringify(card.checklist),
+      card.company,
       card.column,
       card.doneAt,
       card.createdAt,
@@ -254,6 +304,7 @@ app.patch('/api/cards/:id', async (req, res) => {
 
   const description = req.body?.description != null ? String(req.body.description).trim() : row.description;
   const checklist = req.body?.checklist != null ? normalizeChecklist(req.body.checklist) : row.checklist;
+  const company = req.body?.company != null ? normalizeCompany(req.body.company, row.company) : normalizeCompany(row.company, 'otros');
   const requestedColumn = req.body?.column != null ? String(req.body.column) : row.card_column;
   const baseColumn = ALLOWED_COLUMNS.has(requestedColumn) ? requestedColumn : row.card_column;
   const { column, doneAt } = applyChecklistRule(baseColumn, checklist, row.done_at);
@@ -261,10 +312,10 @@ app.patch('/api/cards/:id', async (req, res) => {
 
   const updated = await pool.query(
     `UPDATE cards
-     SET title = $2, description = $3, checklist = $4, card_column = $5, done_at = $6, updated_at = $7
+     SET title = $2, description = $3, checklist = $4, company = $5, card_column = $6, done_at = $7, updated_at = $8
      WHERE id = $1
      RETURNING *`,
-    [req.params.id, title, description, JSON.stringify(checklist), column, doneAt, updatedAt],
+    [req.params.id, title, description, JSON.stringify(checklist), company, column, doneAt, updatedAt],
   );
 
   res.json({ card: toCard(updated.rows[0]) });
