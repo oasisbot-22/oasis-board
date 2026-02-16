@@ -6,11 +6,13 @@ const { Pool } = require('pg');
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
-const APP_VERSION =
-  process.env.APP_VERSION ||
-  process.env.RAILWAY_GIT_COMMIT_SHA ||
-  process.env.SOURCE_VERSION ||
-  String(Date.now());
+const VERSION_PARTS = [
+  process.env.APP_VERSION,
+  process.env.RAILWAY_GIT_COMMIT_SHA,
+  process.env.SOURCE_VERSION,
+  String(Date.now()),
+].filter(Boolean);
+const APP_VERSION = VERSION_PARTS.join('-');
 const INDEX_TEMPLATE = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
 if (!process.env.DATABASE_URL) {
