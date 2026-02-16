@@ -46,26 +46,28 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: color-mix(in srgb, var(--oasis-jet) 70%, black 30%);
-  --bg-elevated: color-mix(in srgb, var(--oasis-jet) 82%, black 18%);
-  --surface: color-mix(in srgb, var(--oasis-jet) 90%, black 10%);
-  --surface-soft: color-mix(in srgb, var(--oasis-jet) 78%, black 22%);
-  --surface-header-mix: color-mix(in srgb, var(--oasis-jet) 86%, black 14%);
-  --column-top: color-mix(in srgb, var(--oasis-jet) 88%, black 12%);
-  --column-bottom: color-mix(in srgb, var(--oasis-jet) 76%, black 24%);
-  --text: color-mix(in srgb, var(--oasis-cultured) 92%, white 8%);
-  --text-soft: color-mix(in srgb, var(--oasis-cultured) 76%, var(--oasis-jet) 24%);
-  --text-faint: color-mix(in srgb, var(--oasis-cultured) 56%, var(--oasis-jet) 44%);
-  --border: color-mix(in srgb, var(--oasis-cultured) 20%, var(--oasis-jet) 80%);
-  --border-strong: color-mix(in srgb, var(--oasis-cultured) 30%, var(--oasis-jet) 70%);
+  /* Neutral dark foundation (Jet-centered, no blue cast on base surfaces) */
+  --bg: #1f1f1f;
+  --bg-elevated: #272727;
+  --surface: #323232;
+  --surface-soft: #3a3a3a;
+  --surface-header-mix: #383838;
+  --column-top: #363636;
+  --column-bottom: #2c2c2c;
+  --text: #f2f2f2;
+  --text-soft: #d2d2d2;
+  --text-faint: #adadad;
+  --border: #4c4c4c;
+  --border-strong: #5c5c5c;
 
-  --accent-vault-50: color-mix(in srgb, var(--oasis-green) 20%, var(--oasis-jet) 80%);
-  --accent-vault-200: color-mix(in srgb, var(--oasis-green) 42%, var(--oasis-jet) 58%);
+  /* Keep brand as accents only */
+  --accent-vault-50: color-mix(in srgb, var(--oasis-green) 20%, var(--surface) 80%);
+  --accent-vault-200: color-mix(in srgb, var(--oasis-green) 42%, var(--surface) 58%);
   --accent-vault-500: color-mix(in srgb, var(--oasis-green) 84%, white 16%);
   --accent-vault-600: var(--oasis-green);
 
-  --accent-otc-50: color-mix(in srgb, var(--oasis-blue) 38%, var(--oasis-jet) 62%);
-  --accent-otc-200: color-mix(in srgb, var(--oasis-blue) 56%, var(--oasis-jet) 44%);
+  --accent-otc-50: color-mix(in srgb, var(--oasis-blue) 26%, var(--surface) 74%);
+  --accent-otc-200: color-mix(in srgb, var(--oasis-blue) 44%, var(--surface) 56%);
   --accent-500: color-mix(in srgb, var(--oasis-blue) 78%, white 22%);
   --accent-600: color-mix(in srgb, var(--oasis-blue) 64%, white 36%);
 
@@ -419,9 +421,9 @@ button.primary:hover {
 }
 
 .card-company-otros {
-  --company-marker: color-mix(in srgb, var(--oasis-jet) 55%, var(--oasis-blue) 45%);
-  --company-badge-bg: color-mix(in srgb, var(--oasis-cultured) 72%, var(--oasis-blue) 28%);
-  --company-badge-text: color-mix(in srgb, var(--oasis-jet) 70%, var(--oasis-blue) 30%);
+  --company-marker: color-mix(in srgb, var(--oasis-jet) 72%, var(--surface) 28%);
+  --company-badge-bg: color-mix(in srgb, var(--surface) 72%, var(--oasis-cultured) 28%);
+  --company-badge-text: color-mix(in srgb, var(--text-soft) 82%, var(--text) 18%);
 }
 
 .card.dragging,
@@ -626,7 +628,7 @@ dialog {
 }
 
 dialog::backdrop {
-  background: rgba(15, 23, 42, .36);
+  background: rgba(0, 0, 0, .44);
 }
 
 #cardForm {
