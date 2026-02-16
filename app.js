@@ -155,24 +155,7 @@ function normalizeCardCompany(card) {
   return inferCompanyFromContent(card);
 }
 
-function buildCompactLinkLabel(rawHref, index, domainCounts) {
-  try {
-    const url = new URL(rawHref);
-    const hostname = (url.hostname || '').replace(/^www\./i, '');
-    const domainToken = hostname.split('.')[0]?.replace(/[^a-z0-9]/gi, '') || '';
-
-    if (domainToken) {
-      const key = domainToken.toLowerCase();
-      const nextCount = (domainCounts.get(key) || 0) + 1;
-      domainCounts.set(key, nextCount);
-      const compactDomain = domainToken.slice(0, 8);
-      const compactName = compactDomain.charAt(0).toUpperCase() + compactDomain.slice(1);
-      return `${compactName} ${nextCount}`;
-    }
-  } catch {
-    // Fall back to generic label.
-  }
-
+function buildCompactLinkLabel(index) {
   return `Link ${index}`;
 }
 
@@ -182,7 +165,6 @@ function renderTextWithLinks(container, text) {
 
   const regex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
   const trailingPunctuationRegex = /[),.;!?]+$/;
-  const domainCounts = new Map();
   let lastIndex = 0;
   let linkIndex = 0;
   let match;
@@ -205,7 +187,7 @@ function renderTextWithLinks(container, text) {
     anchor.href = href;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
-    anchor.textContent = buildCompactLinkLabel(href, linkIndex, domainCounts);
+    anchor.textContent = buildCompactLinkLabel(linkIndex);
     container.append(anchor);
 
     if (trailing) {
