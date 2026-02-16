@@ -9,6 +9,13 @@
 }
 
 * { box-sizing: border-box; }
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -22,11 +29,13 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 main,
 .view-panel {
   flex: 1;
+  min-width: 0;
 }
 
 .app-header {
@@ -43,7 +52,7 @@ main,
 }
 
 h1 { margin: 0; font-size: 1.05rem; }
-h2 { margin: 0 0 .75rem; font-size: .95rem; }
+h2 { margin: 0; font-size: .95rem; }
 
 button {
   border: 1px solid var(--border);
@@ -66,11 +75,13 @@ button.primary:hover { background: var(--primary-dark); }
   grid-template-columns: repeat(3, 1fr);
   gap: .45rem;
   padding: .65rem .85rem 0;
+  min-width: 0;
 }
 
 .tab-btn {
   padding: .5rem .65rem;
   font-weight: 600;
+  min-width: 0;
 }
 
 .tab-btn.active {
@@ -132,10 +143,11 @@ button.primary:hover { background: var(--primary-dark); }
 
 .board {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: .85rem;
   padding: .85rem;
   touch-action: pan-y;
+  min-width: 0;
 }
 
 .column {
@@ -145,16 +157,34 @@ button.primary:hover { background: var(--primary-dark); }
   padding: .75rem;
   min-height: 240px;
   contain: layout paint;
+  min-width: 0;
+}
+
+.column-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 .75rem;
+}
+
+.add-card-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .card-list {
   min-height: 120px;
   display: grid;
   gap: .75rem;
+  min-width: 0;
 }
 
 .panel-wrap {
   padding: .85rem;
+  min-width: 0;
 }
 
 .panel-note {
@@ -179,6 +209,7 @@ button.primary:hover { background: var(--primary-dark); }
   padding: .7rem;
   touch-action: pan-y;
   contain: layout paint;
+  min-width: 0;
 }
 .card.dragging,
 .card.touch-drag-source { opacity: .5; }
@@ -222,23 +253,101 @@ body.drag-mode-lock * {
 }
 
 .card-top {
-  display: flex;
-  justify-content: space-between;
-  gap: .5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .55rem;
   align-items: start;
+  min-width: 0;
 }
 .card-actions {
   display: flex;
-  gap: .35rem;
-  flex-wrap: wrap;
+  flex-direction: row;
+  gap: .4rem;
   justify-content: flex-end;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
-.card-title { margin: 0; font-size: .95rem; }
+.advance-control {
+  display: inline-grid;
+  place-items: center;
+  margin: 0;
+}
+
+.advance-checkbox,
+.edit-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  background: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.advance-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  position: relative;
+}
+
+.advance-checkbox::after {
+  content: '';
+  width: .5rem;
+  height: .9rem;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform .12s ease;
+}
+
+.advance-checkbox:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.advance-checkbox:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.advance-checkbox:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.advance-checkbox:focus-visible,
+.edit-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.edit-btn {
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.card-title {
+  margin: 0;
+  font-size: .95rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .card-desc {
   margin: .5rem 0;
   color: var(--muted);
   white-space: pre-wrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .card-desc:empty { display: none; }
 
@@ -248,11 +357,18 @@ body.drag-mode-lock * {
   list-style: none;
   display: grid;
   gap: .35rem;
+  min-width: 0;
 }
 .checklist li {
   display: flex;
   gap: .4rem;
   align-items: center;
+  min-width: 0;
+}
+.checklist li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .checklist input[type="checkbox"] { cursor: pointer; }
 .checklist .done { text-decoration: line-through; color: var(--muted); }
@@ -312,6 +428,24 @@ menu {
 
 #runtimeVersion {
   opacity: .8;
+}
+
+@media (max-width: 860px) {
+  .card {
+    padding: .6rem;
+  }
+
+  .card-top {
+    gap: .45rem;
+  }
+
+  .card-desc {
+    margin: .35rem 0;
+  }
+
+  .checklist {
+    margin-top: .15rem;
+  }
 }
 
 @media (min-width: 861px) {
