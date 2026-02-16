@@ -32,6 +32,8 @@ const editChecklist = document.getElementById('editChecklist');
 const cancelBtn = document.getElementById('cancelBtn');
 const cardTemplate = document.getElementById('cardTemplate');
 const versionBadgeEl = document.getElementById('runtimeVersion');
+const companyFilterToggle = document.getElementById('companyFilterToggle');
+const companyFilterPopover = document.getElementById('companyFilterPopover');
 const companyFilterButtons = Array.from(document.querySelectorAll('[data-company-filter]'));
 
 const APP_VERSION = window.APP_VERSION || window.__APP_VERSION__ || 'dev';
@@ -186,10 +188,24 @@ function setCompanyFilter(nextFilter, { persist = true } = {}) {
     const isActive = btn.dataset.companyFilter === nextFilter;
     btn.classList.toggle('active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
+    btn.setAttribute('aria-checked', String(isActive));
   }
 
   if (persist) persistCompanyFilter(nextFilter);
   render();
+}
+
+function closeCompanyFilterPopover() {
+  if (!companyFilterPopover || !companyFilterToggle) return;
+  companyFilterPopover.hidden = true;
+  companyFilterToggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleCompanyFilterPopover() {
+  if (!companyFilterPopover || !companyFilterToggle) return;
+  const nextOpen = companyFilterPopover.hidden;
+  companyFilterPopover.hidden = !nextOpen;
+  companyFilterToggle.setAttribute('aria-expanded', String(nextOpen));
 }
 
 function buildCompactLinkLabel(index) {
@@ -821,8 +837,28 @@ tabButtons.backlog.addEventListener('click', () => setView('backlog'));
 tabButtons.history.addEventListener('click', () => setView('history'));
 
 for (const btn of companyFilterButtons) {
-  btn.addEventListener('click', () => setCompanyFilter(btn.dataset.companyFilter || 'all'));
+  btn.addEventListener('click', () => {
+    setCompanyFilter(btn.dataset.companyFilter || 'all');
+    closeCompanyFilterPopover();
+  });
 }
+
+companyFilterToggle?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleCompanyFilterPopover();
+});
+
+companyFilterPopover?.addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+document.addEventListener('click', () => {
+  closeCompanyFilterPopover();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCompanyFilterPopover();
+});
 
 function resetSwipeState() {
   swipeState.active = false;

@@ -93,22 +93,48 @@ button.primary:hover { background: var(--primary-dark); }
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
-.company-filter {
+.company-filter-menu {
+  position: relative;
+}
+
+.company-filter-toggle {
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  border-radius: .55rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: #4b5563;
+}
+
+.company-filter-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .35rem);
+  min-width: 170px;
+  padding: .35rem;
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(31, 41, 55, .14);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .45rem;
-  padding: .5rem .85rem 0;
-  min-width: 0;
+  gap: .3rem;
+  z-index: 25;
+}
+
+.company-filter-popover[hidden] {
+  display: none;
 }
 
 .company-filter-btn {
-  padding: .42rem .5rem;
-  font-size: .82rem;
+  width: 100%;
+  text-align: left;
+  padding: .4rem .5rem;
+  font-size: .8rem;
   font-weight: 600;
-  min-width: 0;
+  border-radius: .45rem;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .company-filter-btn.active {
