@@ -385,6 +385,10 @@ body.drag-mode-lock * {
 .card-desc a {
   color: #2563eb;
   text-decoration: underline;
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .checklist {

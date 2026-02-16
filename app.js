@@ -155,27 +155,62 @@ function normalizeCardCompany(card) {
   return inferCompanyFromContent(card);
 }
 
+function buildCompactLinkLabel(rawHref, index, domainCounts) {
+  try {
+    const url = new URL(rawHref);
+    const hostname = (url.hostname || '').replace(/^www\./i, '');
+    const domainToken = hostname.split('.')[0]?.replace(/[^a-z0-9]/gi, '') || '';
+
+    if (domainToken) {
+      const key = domainToken.toLowerCase();
+      const nextCount = (domainCounts.get(key) || 0) + 1;
+      domainCounts.set(key, nextCount);
+      const compactDomain = domainToken.slice(0, 8);
+      const compactName = compactDomain.charAt(0).toUpperCase() + compactDomain.slice(1);
+      return `${compactName} ${nextCount}`;
+    }
+  } catch {
+    // Fall back to generic label.
+  }
+
+  return `Link ${index}`;
+}
+
 function renderTextWithLinks(container, text) {
   container.textContent = '';
   if (!text) return;
 
   const regex = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi;
+  const trailingPunctuationRegex = /[),.;!?]+$/;
+  const domainCounts = new Map();
   let lastIndex = 0;
+  let linkIndex = 0;
   let match;
 
   while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      container.append(document.createTextNode(text.slice(lastIndex, match.index)));
+    const matchStart = match.index;
+    const rawMatch = match[0];
+    const trailing = rawMatch.match(trailingPunctuationRegex)?.[0] || '';
+    const value = trailing ? rawMatch.slice(0, -trailing.length) : rawMatch;
+
+    if (!value) continue;
+
+    if (matchStart > lastIndex) {
+      container.append(document.createTextNode(text.slice(lastIndex, matchStart)));
     }
 
-    const value = match[0];
+    linkIndex += 1;
     const href = value.startsWith('www.') ? `https://${value}` : value;
     const anchor = document.createElement('a');
     anchor.href = href;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
-    anchor.textContent = value;
+    anchor.textContent = buildCompactLinkLabel(href, linkIndex, domainCounts);
     container.append(anchor);
+
+    if (trailing) {
+      container.append(document.createTextNode(trailing));
+    }
 
     lastIndex = regex.lastIndex;
   }
