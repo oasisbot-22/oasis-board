@@ -93,6 +93,30 @@ button.primary:hover { background: var(--primary-dark); }
 .view-panel { display: none; }
 .view-panel.active { display: block; }
 
+.company-filter {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+  padding: .5rem .85rem 0;
+  min-width: 0;
+}
+
+.company-filter-btn {
+  padding: .42rem .5rem;
+  font-size: .82rem;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.company-filter-btn.active {
+  background: #e8f0ff;
+  border-color: #b7cdfa;
+  color: #1d4ed8;
+}
+
 .pull-refresh {
   --pull-progress: 0;
   position: fixed;

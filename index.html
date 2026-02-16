@@ -26,6 +26,12 @@
         <button id="historyTab" class="tab-btn" data-view="history" type="button">Historial</button>
       </nav>
 
+      <div class="company-filter" role="group" aria-label="Filter tasks by company">
+        <button class="company-filter-btn active" data-company-filter="all" type="button" aria-pressed="true">Todas</button>
+        <button class="company-filter-btn" data-company-filter="vault" type="button" aria-pressed="false">Oasis Vault</button>
+        <button class="company-filter-btn" data-company-filter="otc" type="button" aria-pressed="false">THE OTC DESK</button>
+      </div>
+
       <div id="pullRefresh" class="pull-refresh" aria-hidden="true">
         <div class="pull-refresh-spinner"></div>
       </div>

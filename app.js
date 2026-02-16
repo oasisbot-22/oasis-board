@@ -32,6 +32,7 @@ const editChecklist = document.getElementById('editChecklist');
 const cancelBtn = document.getElementById('cancelBtn');
 const cardTemplate = document.getElementById('cardTemplate');
 const versionBadgeEl = document.getElementById('runtimeVersion');
+const companyFilterButtons = Array.from(document.querySelectorAll('[data-company-filter]'));
 
 const APP_VERSION = window.APP_VERSION || window.__APP_VERSION__ || 'dev';
 const COLUMN_ORDER = ['backlog', 'todo', 'doing', 'done', 'history'];
@@ -42,6 +43,7 @@ let state = { cards: [] };
 let editingId = null;
 let draftChecklist = [];
 let activeView = 'board';
+let activeCompanyFilter = 'all';
 let touchDrag = null;
 let latestLoadRequestId = 0;
 const moveQueues = new Map();
@@ -81,6 +83,8 @@ const COMPANY_LABELS = {
   vault: 'Oasis Vault',
   otros: 'Otros',
 };
+const COMPANY_FILTER_OPTIONS = new Set(['all', 'vault', 'otc']);
+const COMPANY_FILTER_STORAGE_KEY = 'oasisBoard.companyFilter';
 
 const OASIS_VAULT_KEYWORDS = [
   'oasis vault',
@@ -153,6 +157,39 @@ function normalizeCardCompany(card) {
   const rawCompany = String(card?.company || '').trim().toLowerCase();
   if (COMPANY_OPTIONS.has(rawCompany)) return rawCompany;
   return inferCompanyFromContent(card);
+}
+
+function loadCompanyFilter() {
+  try {
+    const saved = localStorage.getItem(COMPANY_FILTER_STORAGE_KEY);
+    if (COMPANY_FILTER_OPTIONS.has(saved)) return saved;
+  } catch {}
+  return 'all';
+}
+
+function persistCompanyFilter(value) {
+  try {
+    localStorage.setItem(COMPANY_FILTER_STORAGE_KEY, value);
+  } catch {}
+}
+
+function cardMatchesCompanyFilter(company, filter = activeCompanyFilter) {
+  if (filter === 'all') return true;
+  return company === filter;
+}
+
+function setCompanyFilter(nextFilter, { persist = true } = {}) {
+  if (!COMPANY_FILTER_OPTIONS.has(nextFilter)) return;
+  activeCompanyFilter = nextFilter;
+
+  for (const btn of companyFilterButtons) {
+    const isActive = btn.dataset.companyFilter === nextFilter;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
+  }
+
+  if (persist) persistCompanyFilter(nextFilter);
+  render();
 }
 
 function buildCompactLinkLabel(index) {
@@ -423,6 +460,9 @@ function render() {
   let backlogCount = 0;
 
   for (const card of state.cards) {
+    const company = normalizeCardCompany(card);
+    if (!cardMatchesCompanyFilter(company)) continue;
+
     if (card.column === 'history') {
       historyCards.push(card);
       continue;
@@ -443,8 +483,19 @@ function render() {
     .sort((a, b) => Number(b.doneAt || 0) - Number(a.doneAt || 0))
     .forEach((card) => fragments.history.append(createCardNode(card)));
 
-  if (!backlogCount) renderEmpty(fragments.backlog, 'Backlog is empty.');
-  if (!historyCards.length) renderEmpty(fragments.history, 'No archived cards yet.');
+  if (!backlogCount) {
+    const backlogMsg = activeCompanyFilter === 'all'
+      ? 'Backlog is empty.'
+      : 'No backlog cards for this company filter.';
+    renderEmpty(fragments.backlog, backlogMsg);
+  }
+
+  if (!historyCards.length) {
+    const historyMsg = activeCompanyFilter === 'all'
+      ? 'No archived cards yet.'
+      : 'No archived cards for this company filter.';
+    renderEmpty(fragments.history, historyMsg);
+  }
 
   lists.todo.replaceChildren(fragments.todo);
   lists.doing.replaceChildren(fragments.doing);
@@ -769,6 +820,10 @@ tabButtons.board.addEventListener('click', () => setView('board'));
 tabButtons.backlog.addEventListener('click', () => setView('backlog'));
 tabButtons.history.addEventListener('click', () => setView('history'));
 
+for (const btn of companyFilterButtons) {
+  btn.addEventListener('click', () => setCompanyFilter(btn.dataset.companyFilter || 'all'));
+}
+
 function resetSwipeState() {
   swipeState.active = false;
   swipeState.tracking = false;
@@ -1021,6 +1076,9 @@ if ('serviceWorker' in navigator) {
     } catch {}
   });
 }
+
+activeCompanyFilter = loadCompanyFilter();
+setCompanyFilter(activeCompanyFilter, { persist: false });
 
 renderRuntimeVersion();
 setView(activeView);
