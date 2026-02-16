@@ -469,6 +469,10 @@ function openEditor(cardId = null, preferredColumn = null) {
     dialog.showModal();
     requestAnimationFrame(() => {
       if (!dialog.open) return;
+      const active = document.activeElement;
+      if (active && dialog.contains(active) && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+        active.blur();
+      }
       try {
         dialog.focus({ preventScroll: true });
       } catch {
