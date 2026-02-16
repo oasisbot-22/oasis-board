@@ -20,7 +20,6 @@ const views = {
 
 const boardEl = document.getElementById('board');
 const pullRefreshEl = document.getElementById('pullRefresh');
-const newCardBtn = document.getElementById('newCardBtn');
 const dialog = document.getElementById('cardDialog');
 const form = document.getElementById('cardForm');
 const dialogTitle = document.getElementById('dialogTitle');
@@ -34,6 +33,9 @@ const cardTemplate = document.getElementById('cardTemplate');
 const versionBadgeEl = document.getElementById('runtimeVersion');
 
 const APP_VERSION = window.APP_VERSION || window.__APP_VERSION__ || 'dev';
+const COLUMN_ORDER = ['backlog', 'todo', 'doing', 'done', 'history'];
+const VIEW_ORDER = ['backlog', 'board', 'history'];
+const addCardButtons = Array.from(document.querySelectorAll('.add-card-btn'));
 
 let state = { cards: [] };
 let editingId = null;
@@ -59,8 +61,35 @@ const pullState = {
   armed: false,
 };
 
+const SWIPE_MIN_DISTANCE = 72;
+const swipeState = {
+  active: false,
+  tracking: false,
+  startX: 0,
+  startY: 0,
+  dx: 0,
+  dy: 0,
+};
+
 const dragLockClass = 'drag-mode-lock';
 let dragLockHolders = 0;
+
+const OASIS_VAULT_KEYWORDS = [
+  'oasis vault',
+  'vault',
+  'oasisboard',
+  'oasis board',
+  'oasis',
+];
+
+const OTC_DESK_KEYWORDS = [
+  'the otc desk',
+  'otc desk',
+  'otc',
+  'ficein',
+  'rail',
+  'provider',
+];
 
 function isDragModeLocked() {
   return dragLockHolders > 0;
@@ -96,6 +125,21 @@ function clearTextSelection() {
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function classifyCardCompany(card) {
+  const haystack = `${card.title || ''} ${card.description || ''}`.toLowerCase();
+
+  if (OASIS_VAULT_KEYWORDS.some((keyword) => haystack.includes(keyword))) {
+    return 'vault';
+  }
+
+  if (OTC_DESK_KEYWORDS.some((keyword) => haystack.includes(keyword))) {
+    return 'otc';
+  }
+
+  // Deterministic fallback so every card has a visible company marker.
+  return 'otc';
 }
 
 async function api(path, options = {}) {
@@ -215,14 +259,41 @@ function renderEmpty(listEl, text) {
   listEl.append(note);
 }
 
+function getNextColumn(column) {
+  const idx = COLUMN_ORDER.indexOf(column);
+  if (idx < 0 || idx >= COLUMN_ORDER.length - 1) return null;
+  return COLUMN_ORDER[idx + 1];
+}
+
 function createCardNode(card, { draggable = false } = {}) {
   const node = cardTemplate.content.firstElementChild.cloneNode(true);
   node.dataset.id = card.id;
+
+  const company = classifyCardCompany(card);
+  node.dataset.company = company;
+  node.classList.add(`card-company-${company}`);
 
   if (!draggable) node.draggable = false;
 
   node.querySelector('.card-title').textContent = card.title;
   node.querySelector('.card-desc').textContent = card.description || '';
+
+  const advanceCheckbox = node.querySelector('.advance-checkbox');
+  const nextColumn = getNextColumn(card.column);
+  if (advanceCheckbox) {
+    advanceCheckbox.checked = false;
+    advanceCheckbox.disabled = !nextColumn;
+    advanceCheckbox.addEventListener('change', async () => {
+      advanceCheckbox.checked = false;
+      if (!nextColumn) return;
+      try {
+        await moveCardToColumn(card.id, nextColumn);
+      } catch (err) {
+        alert(`Could not advance card: ${err.message}`);
+        await loadCards();
+      }
+    });
+  }
 
   const checklistEl = node.querySelector('.checklist');
   card.checklist.forEach((item) => {
@@ -320,6 +391,7 @@ function render() {
 }
 
 function setView(viewName) {
+  if (!VIEW_ORDER.includes(viewName)) return;
   activeView = viewName;
   if (!pullState.refreshing) resetPullState();
 
@@ -333,14 +405,14 @@ function setView(viewName) {
   });
 }
 
-function openEditor(cardId = null) {
+function openEditor(cardId = null, preferredColumn = null) {
   editingId = cardId;
   const card = state.cards.find((c) => c.id === cardId);
 
   dialogTitle.textContent = card ? 'Edit Card' : 'New Card';
   titleInput.value = card?.title || '';
   descInput.value = card?.description || '';
-  columnInput.value = card?.column || 'backlog';
+  columnInput.value = card?.column || preferredColumn || 'backlog';
   draftChecklist = card ? card.checklist.map((i) => ({ ...i })) : [];
   renderChecklistEditor();
 
@@ -611,11 +683,89 @@ function onTouchPointerCancel(e) {
   cleanupTouchDrag();
 }
 
-newCardBtn.addEventListener('click', () => openEditor());
+for (const btn of addCardButtons) {
+  btn.addEventListener('click', () => openEditor(null, btn.dataset.column || 'backlog'));
+}
 
 tabButtons.board.addEventListener('click', () => setView('board'));
 tabButtons.backlog.addEventListener('click', () => setView('backlog'));
 tabButtons.history.addEventListener('click', () => setView('history'));
+
+function resetSwipeState() {
+  swipeState.active = false;
+  swipeState.tracking = false;
+  swipeState.dx = 0;
+  swipeState.dy = 0;
+}
+
+function shouldTrackSwipe(target) {
+  if (!(target instanceof Element)) return false;
+  if (pullState.active || pullState.refreshing || touchDrag?.active) return false;
+  if (dialog.open) return false;
+  if (target.closest('button, input, textarea, select, label, a, dialog')) return false;
+  if (activeView === 'board' && target.closest('.card')) return false;
+  return true;
+}
+
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length !== 1) {
+    resetSwipeState();
+    return;
+  }
+  if (!shouldTrackSwipe(e.target)) {
+    resetSwipeState();
+    return;
+  }
+  const t = e.touches[0];
+  swipeState.active = true;
+  swipeState.tracking = false;
+  swipeState.startX = t.clientX;
+  swipeState.startY = t.clientY;
+  swipeState.dx = 0;
+  swipeState.dy = 0;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!swipeState.active || pullState.active || touchDrag?.active) return;
+  if (e.touches.length !== 1) {
+    resetSwipeState();
+    return;
+  }
+
+  const t = e.touches[0];
+  swipeState.dx = t.clientX - swipeState.startX;
+  swipeState.dy = t.clientY - swipeState.startY;
+
+  if (!swipeState.tracking) {
+    const horizontalIntent = Math.abs(swipeState.dx) > Math.abs(swipeState.dy) + TOUCH_DRAG_AXIS_BIAS_PX;
+    if (!horizontalIntent) {
+      if (Math.abs(swipeState.dy) > TOUCH_DRAG_SCROLL_CANCEL_PX) resetSwipeState();
+      return;
+    }
+    swipeState.tracking = true;
+  }
+
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  if (!swipeState.active || !swipeState.tracking) {
+    resetSwipeState();
+    return;
+  }
+
+  const distance = swipeState.dx;
+  const currentIndex = VIEW_ORDER.indexOf(activeView);
+  if (distance <= -SWIPE_MIN_DISTANCE && currentIndex < VIEW_ORDER.length - 1) {
+    setView(VIEW_ORDER[currentIndex + 1]);
+  } else if (distance >= SWIPE_MIN_DISTANCE && currentIndex > 0) {
+    setView(VIEW_ORDER[currentIndex - 1]);
+  }
+
+  resetSwipeState();
+}, { passive: true });
+
+document.addEventListener('touchcancel', resetSwipeState, { passive: true });
 
 addItemBtn.addEventListener('click', () => {
   draftChecklist.push({ id: uid(), text: '', checked: false });

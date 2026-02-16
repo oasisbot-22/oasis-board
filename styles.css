@@ -203,14 +203,25 @@ button.primary:hover { background: var(--primary-dark); }
 }
 
 .card {
+  --company-marker: transparent;
   background: #fff;
   border: 1px solid var(--border);
+  border-left: 3px solid var(--company-marker);
   border-radius: .65rem;
   padding: .7rem;
   touch-action: pan-y;
   contain: layout paint;
   min-width: 0;
 }
+
+.card-company-vault {
+  --company-marker: rgba(22, 163, 74, 0.55);
+}
+
+.card-company-otc {
+  --company-marker: rgba(37, 99, 235, 0.55);
+}
+
 .card.dragging,
 .card.touch-drag-source { opacity: .5; }
 
