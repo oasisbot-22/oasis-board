@@ -46,18 +46,18 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: color-mix(in srgb, var(--oasis-jet) 92%, black 8%);
-  --bg-elevated: color-mix(in srgb, var(--oasis-jet) 82%, var(--oasis-blue) 18%);
-  --surface: color-mix(in srgb, var(--oasis-jet) 76%, var(--oasis-blue) 24%);
-  --surface-soft: color-mix(in srgb, var(--oasis-jet) 66%, var(--oasis-blue) 34%);
-  --surface-header-mix: color-mix(in srgb, var(--oasis-jet) 70%, var(--oasis-blue) 30%);
-  --column-top: color-mix(in srgb, var(--oasis-jet) 72%, var(--oasis-blue) 28%);
-  --column-bottom: color-mix(in srgb, var(--oasis-jet) 82%, var(--oasis-blue) 18%);
+  --bg: color-mix(in srgb, var(--oasis-jet) 70%, black 30%);
+  --bg-elevated: color-mix(in srgb, var(--oasis-jet) 82%, black 18%);
+  --surface: color-mix(in srgb, var(--oasis-jet) 90%, black 10%);
+  --surface-soft: color-mix(in srgb, var(--oasis-jet) 78%, black 22%);
+  --surface-header-mix: color-mix(in srgb, var(--oasis-jet) 86%, black 14%);
+  --column-top: color-mix(in srgb, var(--oasis-jet) 88%, black 12%);
+  --column-bottom: color-mix(in srgb, var(--oasis-jet) 76%, black 24%);
   --text: color-mix(in srgb, var(--oasis-cultured) 92%, white 8%);
-  --text-soft: color-mix(in srgb, var(--oasis-cultured) 74%, var(--oasis-blue) 26%);
-  --text-faint: color-mix(in srgb, var(--oasis-cultured) 58%, var(--oasis-blue) 42%);
-  --border: color-mix(in srgb, var(--oasis-blue) 48%, var(--oasis-jet) 52%);
-  --border-strong: color-mix(in srgb, var(--oasis-blue) 62%, var(--oasis-jet) 38%);
+  --text-soft: color-mix(in srgb, var(--oasis-cultured) 76%, var(--oasis-jet) 24%);
+  --text-faint: color-mix(in srgb, var(--oasis-cultured) 56%, var(--oasis-jet) 44%);
+  --border: color-mix(in srgb, var(--oasis-cultured) 20%, var(--oasis-jet) 80%);
+  --border-strong: color-mix(in srgb, var(--oasis-cultured) 30%, var(--oasis-jet) 70%);
 
   --accent-vault-50: color-mix(in srgb, var(--oasis-green) 20%, var(--oasis-jet) 80%);
   --accent-vault-200: color-mix(in srgb, var(--oasis-green) 42%, var(--oasis-jet) 58%);
