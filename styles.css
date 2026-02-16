@@ -331,6 +331,16 @@ body.drag-mode-lock * {
   line-height: 1;
 }
 
+.advance-icon::before {
+  content: '→';
+}
+
+@media (max-width: 768px) {
+  .advance-icon::before {
+    content: '↓';
+  }
+}
+
 .advance-btn:hover:not(:disabled) {
   background: #f7faff;
   border-color: var(--primary);
