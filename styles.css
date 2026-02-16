@@ -553,6 +553,36 @@ body.drag-mode-lock * {
   cursor: not-allowed;
 }
 
+:root[data-theme='dark'] .advance-btn {
+  background: color-mix(in srgb, var(--surface) 86%, black 14%);
+  border-color: var(--accent-500);
+  color: var(--accent-600);
+}
+
+:root[data-theme='dark'] .advance-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface) 74%, var(--surface-soft) 26%);
+  border-color: color-mix(in srgb, var(--accent-500) 88%, white 12%);
+  color: color-mix(in srgb, var(--accent-600) 84%, white 16%);
+}
+
+:root[data-theme='dark'] .advance-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--surface) 66%, black 34%);
+}
+
+:root[data-theme='dark'] .card-company-label,
+:root[data-theme='dark'] .company-badge {
+  background: color-mix(in srgb, var(--surface) 84%, black 16%);
+  border: 1px solid currentColor;
+}
+
+:root[data-theme='dark'] .card-company-vault {
+  --company-badge-text: color-mix(in srgb, var(--accent-vault-500) 84%, white 16%);
+}
+
+:root[data-theme='dark'] .card-company-otc {
+  --company-badge-text: color-mix(in srgb, var(--accent-500) 84%, white 16%);
+}
+
 .edit-btn {
   padding: 0;
   font-size: .95rem;
